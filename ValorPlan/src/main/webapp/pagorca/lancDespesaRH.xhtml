@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+ 	xmlns:h="http://xmlns.jcp.org/jsf/html"
+ 	xmlns:f="http://xmlns.jcp.org/jsf/core"
+ 	xmlns:p="http://primefaces.org/ui"
+ 	xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+ 	template="/WEB-INF/templates/Layout.xhtml">
+
+<ui:define name="titulo">Lançamento de Despesas de Folha/RH</ui:define>
+
+<ui:define name="conteudo">
+
+<style type="text/css">
+	.bloco {
+		margin-left: 5px;
+		margin-right: 5px;
+		overflow-y: auto; 
+	}
+</style>
+
+	<f:metadata>
+		<f:viewAction action="#{loginBean.validarPermissao('132;')}" />
+		<f:viewAction action="#{depArvoreBean.criarEstruturaCompleta}"/>
+	</f:metadata>
+
+	<h:form id="frm">
+		<p:growl id="messages" />
+		
+		<div class="ui-grid  ui-grid-responsive">
+			<div class="ui-grid-row">
+
+				<div class="ui-grid-col-3 coluna-arvore">
+    				<p:tree id="departamentoTree" value="#{depArvoreBean.estrut}" var="doc"
+				        selectionMode="single" selection="#{depArvoreBean.selectedNode}"
+				        style="border: 0">
+				       
+				        <p:treeNode expandedIcon="fa fa-folder-open" collapsedIcon="fa fa-folder">
+				            <h:outputText value="#{doc.sgDepartamento}:" styleClass="textoNegrito"/>
+				            <h:outputText value=" #{doc.responsavel.nomeVinculo}"/>
+				        </p:treeNode>
+							
+						<p:treeNode type="setor" expandedIcon="fa fa-folder-open" collapsedIcon="fa fa-folder">
+				            <h:outputText value="#{doc.codExterno} - #{doc.cecDsResumida}: #{doc.responsavel.nomeVinculo}" />
+				        </p:treeNode>
+				       	
+				        <p:treeNode type="vendedor" icon="fa fa-user">
+				            <h:outputText value="#{doc.nomeVinculoAtual}" />
+				        </p:treeNode>
+				        
+				        <p:ajax event="select" process="@this" update="frm:valoresDT frm:despesaDataTable frm:despesaPanel"
+							listener="#{lancDespesaRHBean.limpaDespesa(depArvoreBean.selectedNode)}"
+							oncomplete="configurarMoeda()"/>
+						
+				        <p:ajax event="unselect" process="@this" update="frm:valoresDT frm:despesaDataTable frm:despesaPanel"
+							listener="#{lancDespesaRHBean.limpaDespesa(depArvoreBean.selectedNode)}"
+							oncomplete="configurarMoeda()"/>
+				    </p:tree>
+    			</div>
+		
+				<div class="ui-grid-col-9">
+					<p:panel id="despesaPanel">
+						<h:panelGrid columns="1">
+							<h:panelGroup>
+								<p:outputLabel value="Nome do Recurso:" style="padding-right: 5px; font-weight: bold;"/>
+								<h:outputText value="#{lancDespesaRHBean.funcionario.nomeVinculoAtual}" />
+							
+								<p:outputLabel value="Cargo:" style="padding-left: 20px; padding-right: 5px; font-weight: bold;"/>
+								<h:outputText value="#{lancDespesaRHBean.funcionario.cargo.dsCargo}" />
+							</h:panelGroup>								
+						
+						</h:panelGrid>
+					</p:panel>
+					
+					<div class="ui-grid-col-9">
+						
+						<p:dataTable id="despesaDataTable" value="#{lancDespesaRHBean.listaOrcamentoDespesa}" var="item" 
+							style="font-size: .9em; width: 100%"
+							emptyMessage="Nenhuma informação encontrada"
+							selectionMode="single" selection="#{lancDespesaRHBean.despesa}" rowKey="#{item.conta.cdConta}"
+							scrollable="true" scrollHeight="390"
+							reflow="true">
+						
+							<p:ajax event="rowSelect" listener="#{lancDespesaRHBean.listaValores}" 
+								update="frm:despesaPanel frm:valoresPanelGrid" 
+								oncomplete="configurarMoeda()"/>
+							<p:ajax event="rowUnselect" listener="#{lancDespesaRHBean.listaValores}" 
+								update="frm:despesaPanel frm:valoresPanelGrid" />
+							
+							<p:column headerText="Despesa" width="15%" sortBy="#{item.conta.cdConta}">
+								<h:outputText value="#{item.conta.cdConta}-#{item.conta.sgConta}"/>
+							</p:column>
+							
+							<p:column headerText="Descrição" sortBy="#{item.conta.dsConta}">
+								<h:outputText value="#{item.conta.dsConta}"/>
+							</p:column>
+							
+							<p:column headerText="Tipo" width="15%">
+								<h:outputText value="#{item.conta.tipo.descricao}"/>
+							</p:column>
+							
+							<p:column headerText="Acumulado Anual" width="15%" styleClass="direita" sortBy="#{item.vrContaAcum}">
+								<h:outputText value="#{item.vrContaAcum}">
+									<f:convertNumber pattern="#,##0.00"/>
+								</h:outputText>
+							</p:column>
+							
+						</p:dataTable>
+					
+					</div>
+					
+					<div class="ui-grid-col-3">
+						
+						<h:panelGrid id="valoresPanelGrid">
+							<p:dataTable id="valoresDT" value="#{lancDespesaRHBean.valores}" var="item" 
+								style="font-size: .9em; width: 100%"
+								rowHover="true"
+								rowStyleClass="fundoBranco"
+								reflow="true">
+							
+								<p:column headerText="Mes">
+									<h:outputText value="#{item.mesRef.nomeMes}"/>
+								</p:column>
+							
+								<p:column headerText="Valor" styleClass="#{item.mesRef.mesAberto ? '' : 'fundoCinza'}">
+									<p:inputText value="#{item.vrOrcado}" maxlength="15" 
+										style="padding: 0; margin: 0; width: 100% !important" styleClass="moeda"
+				                		title="#{item.mesRef.mesAberto ? '' : 'MÊS FECHADO'}"
+				                		disabled="#{!item.mesRef.mesAberto}">
+										<f:convertNumber maxFractionDigits="2" minFractionDigits="2"/>
+									</p:inputText>
+					            </p:column>
+					            			
+							</p:dataTable>
+							
+						    <p:commandButton id="gravarCommandButton" value="Salvar" icon="fa fa-save" 
+						    	style="width: 100%"
+						    	title="Confirma alteração dos dados" 
+				            	disabled="#{lancDespesaRHBean.inativo}"
+				            	actionListener="#{lancDespesaRHBean.gravarOrcamento}"
+				            	process="@this frm:valoresDT" 
+				            	update="messages frm:despesaDataTable frm:despesaPanel"
+				            	oncomplete="configurarMoeda()" />
+						
+						</h:panelGrid>
+					</div>
+					
+					
+				</div>
+				
+			</div>
+		</div>
+		
+					
+	</h:form>		
+</ui:define>
+
+<ui:define name="rodape">1.0.0</ui:define>
+
+</ui:composition>

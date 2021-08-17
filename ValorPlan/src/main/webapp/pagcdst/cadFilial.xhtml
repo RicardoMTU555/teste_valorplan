@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://xmlns.jcp.org/jsf/html"
+	xmlns:f="http://xmlns.jcp.org/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+	template="/WEB-INF/templates/Layout.xhtml">
+
+	<ui:define name="titulo">Cadastro de Filiais</ui:define>
+
+	<ui:define name="conteudo">
+
+		<f:metadata>
+			<f:viewAction action="#{loginBean.validarPermissao('4;')}" />
+			<f:viewAction action="#{filialBean.listarTudo}" />
+		</f:metadata>
+
+		<h:form id="frm">
+			<p:messages id="messages" />
+			
+			<p:toolbar id="filialToolbar">
+				<f:facet name="left">
+					<p:inputText id="termoPesquisa"
+						placeholder="Digite parte do nome..." size="30"
+						value="#{filialBean.termoPesquisa}" />
+
+					<p:commandButton value="Pesquisar" icon="fa fa-search"
+						actionListener="#{filialBean.listarFiltro}"
+						update="filialDataTable messages" process="@this termoPesquisa" />
+
+					<span class="ui-separator"> <span
+						class="ui-icon ui-icon-grip-dotted-vertical" />
+					</span>
+
+					<p:commandButton value="Incluir" icon="fa fa-plus"
+						title="Inclui nova filial"
+						actionListener="#{filialBean.inicializarRegistro}"
+						oncomplete="PF('filialDialogWidgetVar').show()"
+						update="filialDialog" process="@this">
+						<p:resetInput target="filialDialog" />
+					</p:commandButton>
+
+					<span class="ui-separator"> <span
+						class="ui-icon ui-icon-grip-dotted-vertical" />
+					</span>
+
+					<p:commandButton value="Editar" icon="fa fa-edit"
+						title="Altera o registro selecionado"
+						disabled="#{not filialBean.itemSelecionado}"
+						actionListener="#{filialBean.alterarRegistro}"
+						oncomplete="PF('filialDialogWidgetVar').show()"
+						update="filialDialog" process="@this">
+						<p:resetInput target="filialDialog" />
+					</p:commandButton>
+
+					<p:commandButton value="Excluir" icon="fa fa-trash"
+						title="Exclui o registro selecionado"
+						disabled="#{not filialBean.itemSelecionado}"
+						actionListener="#{filialBean.excluir}"
+						update="messages filialDataTable filialToolbar" process="@this">
+						<p:confirm icon="ui-icon-alert" header="Confirmação de Exclusão"
+							message="Deseja Excluir a filial?" />
+					</p:commandButton>
+
+					<span class="ui-separator"> <span
+						class="ui-icon ui-icon-grip-dotted-vertical" />
+					</span>
+
+					<p:commandButton value="Endereços" icon="fa fa-home"
+						title="Manutenção nos endereços da filial selecionada"
+						disabled="#{not filialBean.itemSelecionado}"
+						action="#{filialBean.irParaEndereco}" ajax="false" 
+						rendered="false"/>
+
+					<p:commandButton title="Gera Planilha Excel"
+						icon="fa fa-file-excel-o" ajax="false">
+						<p:dataExporter type="xls" target="filialDataTable"
+							fileName="PlanilhaFilial" />
+					</p:commandButton>
+				</f:facet>
+			</p:toolbar>
+
+			<p:spacer height="10" />
+
+			<p:dataTable id="filialDataTable" value="#{filialBean.listaFilial}" var="item"
+				emptyMessage="Nenhuma informação a ser exibida" paginator="true"
+				rows="15" paginatorPosition="bottom" selectionMode="single"
+				selection="#{filialBean.filial}" rowKey="#{item.cdFilial}"
+				reflow="true">
+
+				<p:ajax event="rowSelect" update="frm:filialToolbar" />
+				<p:ajax event="rowUnselect" update="frm:filialToolbar" />
+
+				<p:column headerText="Código" width="10%"
+					sortBy="#{item.codExterno}">
+					<h:outputText value="#{item.codExterno}" />
+				</p:column>
+
+				<p:column headerText="CNPJ" width="12%">
+					<h:outputText value="#{item.dcFilial}" />
+				</p:column>
+
+				<p:column headerText="Nome" sortBy="#{item.dsFilial}">
+					<h:outputText value="#{item.dsFilial}" />
+				</p:column>
+
+				<p:column headerText="Sigla" width="15%" sortBy="#{item.sgFilial}">
+					<h:outputText value="#{item.sgFilial}" />
+				</p:column>
+
+			</p:dataTable>
+
+
+			<p:dialog id="filialDialog" header="Cadastro de Filiais"
+				widgetVar="filialDialogWidgetVar" modal="true" resizable="false"
+				closeOnEscape="true"
+				responsive="true">
+				
+				<p:messages id="filialMessages" />
+
+				<p:defaultCommand target="salvarCommandButton" scope="filialDialog" />
+
+				<p:panelGrid id="filialPanelGrid" columns="2" layout="grid" 
+					styleClass="ui-panelgrid-blank" columnClasses="ui-g-12 ui-lg-5,ui-g-12 ui-lg-7"
+					rendered="#{filialBean.filial ne null}">
+            
+					<p:outputLabel value="ID Interno:" />
+					<h:outputText value="#{filialBean.filial.cdFilial}"
+						styleClass="textoNegrito">
+						<f:convertNumber pattern="000" />
+					</h:outputText>
+
+					<p:outputLabel value="Referência Externa:" for="codExterno" />
+					<p:inputText id="codExterno" maxlength="15"
+						value="#{filialBean.filial.codExterno}">
+					</p:inputText>
+
+					<p:outputLabel value="CNPJ:" for="dcFilial" />
+					<p:inputMask id="dcFilial" value="#{filialBean.filial.dcFilial}"
+						mask="99.999.999/9999-99" type="integer"
+						converter="cpfConverter" />
+
+					<p:outputLabel value="Nome da Filial:" for="dsFilial" />
+					<p:inputText id="dsFilial" maxlength="40"
+						value="#{filialBean.filial.dsFilial}" />
+
+					<p:outputLabel value="Sigla:" for="sgFilial" />
+					<p:inputText id="sgFilial" maxlength="10"
+						value="#{filialBean.filial.sgFilial}" />
+
+					<h:outputLabel />
+
+					<p:commandButton id="salvarCommandButton" value="Salvar"
+						actionListener="#{filialBean.salvar}"
+						update="filialPanelGrid filialMessages"
+						oncomplete="if (!args.validationFailed) PF('filialDialogWidgetVar').hide()"
+						process="filialDialog" />
+				
+				</p:panelGrid>
+			</p:dialog>
+		</h:form>
+	</ui:define>
+
+	<ui:define name="rodape">1.0.0</ui:define>
+
+</ui:composition>

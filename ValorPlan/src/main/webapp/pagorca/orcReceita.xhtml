@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+ 	xmlns:h="http://xmlns.jcp.org/jsf/html"
+ 	xmlns:f="http://xmlns.jcp.org/jsf/core"
+ 	xmlns:p="http://primefaces.org/ui"
+ 	xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+ 	template="/WEB-INF/templates/Layout.xhtml">
+
+<ui:define name="titulo">Orçamento de Receitas</ui:define>
+
+<ui:define name="conteudo">
+
+<style type="text/css">
+	.ui-button {
+		margin-right: 5px;
+		margin-left: 5px;
+	}
+
+.bloco1 {
+	padding-right: 5px;
+	height: 410px;
+	overflow-y: auto;
+}
+	
+</style>
+
+	<f:metadata>
+		<f:viewAction action="#{loginBean.validarPermissao('150;')}"/>
+		<f:viewAction action="#{depArvoreBean.criarEstruturaReceita}"/>
+	</f:metadata>
+
+	<h:form id="frm">
+		<p:messages id="messages" />	
+			
+		<p:toolbar id="receitaToolbar">
+			<p:toolbarGroup align="left">
+			
+				<p:outputLabel value="Ano Orçamento:" for="anoOrc"/>
+				
+				<h:outputText id="anoOrc" value="#{orcReceitaBean.mesRef.ano}"
+					styleClass="textoNegrito"
+					style="margin-left: 5px; margin-right: 10px"/>
+					
+				<h:outputText value="Mês" style="padding-right: 5px"/>
+				
+				<p:commandButton title="Anterior" icon="fa fa-caret-square-o-left"
+					actionListener="#{orcReceitaBean.mesAnterior(depArvoreBean.selectedNode)}" 
+					update="frm:receitaToolbar frm:totaisPG frm:receitasDataTable" 
+					process="@this anoOrc"
+					disabled="#{orcReceitaBean.anual}"/>
+				
+				<p:selectOneMenu value="#{orcReceitaBean.mesRef.mes}" style="vertical-align: middle"
+					disabled="#{orcReceitaBean.anual}">
+					<f:selectItems value="#{orcReceitaBean.mesRef.meses}"/>
+					
+					<p:ajax event="change" 
+						process="@this anoOrc"
+						update="frm:receitaToolbar frm:totaisPG frm:receitasDataTable" 
+						listener="#{orcReceitaBean.listarReceitaOrcamento(depArvoreBean.selectedNode)}"
+						oncomplete="configurarMoeda()"/>
+				</p:selectOneMenu>
+
+				<p:commandButton title="Próximo" icon="fa fa-caret-square-o-right"
+					actionListener="#{orcReceitaBean.mesPosterior(depArvoreBean.selectedNode)}" 
+					update="frm:receitaToolbar frm:totaisPG frm:receitasDataTable" 
+					process="@this anoOrc"
+					disabled="#{orcReceitaBean.anual}"/>
+				
+				<span class="ui-separator">
+	                <span class="ui-icon ui-icon-grip-dotted-vertical" />
+	            </span>
+	            
+	            <p:selectBooleanCheckbox value="#{orcReceitaBean.anual}" style="padding-rigth: 5px; vertical-align: middle;">
+					<p:ajax process="@this anoOrc departamentoTree" update="@form" 
+						listener="#{orcReceitaBean.listarReceitaOrcamento(depArvoreBean.selectedNode)}"/>
+				</p:selectBooleanCheckbox>
+			
+				<h:outputText value="Resultado Anual" style="margin-left:5px"/>
+			
+				<span class="ui-separator">
+	                <span class="ui-icon ui-icon-grip-dotted-vertical" />
+	            </span>
+	            
+			</p:toolbarGroup>
+			
+			<p:toolbarGroup align="right">
+			    <p:commandButton value="Excel" title="Gera Planilha Excel" icon="fa fa-file-excel-o"
+	            	ajax="false">
+	            	<p:dataExporter type="xls" target="frm:receitasDataTable" fileName="PlanilhaReceitaVendedor" />
+	            </p:commandButton>
+	            
+			</p:toolbarGroup>
+		</p:toolbar>
+		
+		<div id="estrutura">
+			<h3 style="margin-top:5"><h:outputText id="descrDepartamento" value="#{orcReceitaBean.descrDepartamento}"/></h3>
+		</div>
+		
+		<div class="ui-grid  ui-grid-responsive  coluna-arvore">
+			<div class="ui-grid-row">
+				<div class="ui-grid-col-2 bloco1">
+    
+					<p:tree id="departamentoTree" value="#{depArvoreBean.estrut}" var="doc"
+				        selectionMode="single" selection="#{depArvoreBean.selectedNode}"
+				        style="border: 0">
+				       
+				        <p:treeNode expandedIcon="fa fa-folder-open" collapsedIcon="fa fa-folder">
+				            <h:outputText value="#{doc.sgDepartamento}" styleClass="textoNegrito"/>
+				        </p:treeNode>
+							
+						<p:treeNode type="setor" expandedIcon="fa fa-folder-open" collapsedIcon="fa fa-folder">
+				            <h:outputText value="#{doc.codExterno} - #{doc.cecDsResumida}" />
+				        </p:treeNode>
+				       	
+				       	<p:treeNode type="vendedor" icon="fa fa-user">
+				            <h:outputText value="#{doc.nomeVinculo}" />
+				        </p:treeNode>
+				        
+						<p:ajax event="select" update="frm:descrDepartamento frm:totaisPG frm:receitasDataTable" 
+							listener="#{orcReceitaBean.listarReceitaOrcamento(depArvoreBean.selectedNode)}"/>
+				        
+				        <p:ajax event="unselect" update="frm:descrDepartamento frm:totaisPG frm:receitasDataTable" 
+							listener="#{orcReceitaBean.limparReceitaOrcamento}"/>
+				        
+				    </p:tree>
+				</div>
+
+				<div class="ui-grid-col-10" style="padding-left: 7px">
+					<p:panelGrid id="totaisPG" columns="6" style="width: 100%">
+						<p:outputLabel value="Quantidade Receitas:"/>
+						<p:outputLabel value="Total de Receita Bruta:"/>
+						<p:outputLabel value="Total de Deduções de Vendas:"/>
+						<p:outputLabel value="Total de Receita Líquida:"/>
+						<p:outputLabel value="Total de Despesas de RH:"/>
+						<p:outputLabel value="Lucro Líquido:"/>
+							
+						<h:outputText value="#{orcReceitaBean.totalOrcReceita.quantidade}">
+							<f:convertNumber type="number" pattern="#,##0.00"/>
+						</h:outputText>
+		
+						<h:outputText value="#{orcReceitaBean.totalOrcReceita.valorUnitario}">
+							<f:convertNumber type="number" pattern="#,##0.00"/>
+						</h:outputText>
+		
+						<h:outputText value="#{orcReceitaBean.totalOrcReceita.valorDespesa}">
+							<f:convertNumber type="number" pattern="#,##0.00"/>
+						</h:outputText>
+			
+						<h:outputText value="#{orcReceitaBean.totalOrcReceita.lucroBrutoUnitario}">
+							<f:convertNumber type="number" pattern="#,##0.00"/>
+						</h:outputText>
+		
+						<h:outputText value="#{orcReceitaBean.totalDespesaEquipe.vrConta}">
+							<f:convertNumber type="number" pattern="#,##0.00"/>
+						</h:outputText>
+				
+						<h:outputText value="#{orcReceitaBean.lucroLiquidoTotal}">
+							<f:convertNumber type="number" pattern="#,##0.00"/>
+						</h:outputText>
+		
+					</p:panelGrid>
+					
+					<p:dataTable id="receitasDataTable" value="#{orcReceitaBean.listaOrcRec}"
+							style="width: 100%; margin: 10px 0 0 0; font-size: .9em" scrollable="true" scrollHeight="290"
+							var="item" emptyMessage="Nenhuma informação a ser exibida">
+						
+						<p:column headerText="Receita" width="8%">
+							<h:outputText value="#{item.receita.sgReceita}"/>
+						</p:column>
+						
+						<p:column headerText="Conta" width="8%">
+							<h:outputText value="#{item.receita.contaReceita.cdConta}"
+								title="#{item.receita.contaReceita.dsConta}"/>
+						</p:column>
+						
+						<p:column headerText="Descrição">
+							<h:outputText value="#{item.receita.dsReceita}"/>
+						</p:column>
+						
+						<p:column headerText="Categoria" width="8%">
+							<h:outputText value="#{item.receita.categoria.dsCategoria}"/>
+						</p:column>
+						
+						<p:column headerText="Quantidade" width="8%">
+							 
+							<p:commandLink
+								title="Mostra detalhes da equipe"
+								action="#{orcReceitaBean.listarDetalheEquipe}"
+								process="@this"
+								update="frm:receitaEquipeDialog"
+								oncomplete="PF('receitaEquipeDialogWidgetVar').show()">
+														
+								<f:setPropertyActionListener value="#{item}" target="#{orcReceitaBean.orcReceita}"/>
+								
+								<h:outputText value="#{item.quantidade}">
+									<f:convertNumber pattern="000"/>
+								</h:outputText>	
+							</p:commandLink>
+							 
+						</p:column>
+						
+						<p:column headerText="Valor Total" width="12%" style="text-align: right;">
+							<h:outputText id="vlrTotal" value="#{item.valorUnitario}">
+								<f:convertNumber pattern="#,##0.00"/>
+							</h:outputText>
+						</p:column>
+							
+						<p:column headerText="% Deduções" width="8%" style="text-align: right;">
+							<h:outputText id="percDespesa" value="#{item.percDespesa}">
+								<f:convertNumber minFractionDigits="2" type="number"/>	
+							</h:outputText>
+							 
+			            	<p:commandLink 
+			            		title="% Despesas sobre a receita"
+								action="#{orcReceitaBean.listarCustoVenda}"
+								process="@this" 
+								update="frm:receitaEquipeDialog"
+								oncomplete="PF('receitaEquipeDialogWidgetVar').show()"
+								style="margin-left: 5px">
+								
+								<f:setPropertyActionListener value="#{item}" target="#{orcReceitaBean.orcReceita}"/>
+								
+								<h:graphicImage value="../resources/ctbli9/images/detalhe.png"
+									title="Mergulho nas deduções da receita"/>
+		
+							</p:commandLink>
+							
+						</p:column>	
+						
+						<p:column headerText="Valor Despesas" width="11%" style="text-align: right;">
+							<h:outputText id="valorDespesa" value="#{item.valorDespesa}" >
+								<f:convertNumber pattern="#,##0.00"/>
+							</h:outputText>
+						</p:column>
+							
+						<p:column headerText="Lucro Bruto" width="10%" style="text-align: right;">
+							<h:outputText id="lucrobruto" value="#{item.lucroBrutoUnitario}">
+								<f:convertNumber pattern="#,##0.00"/>
+							</h:outputText>
+						</p:column>			
+							
+					</p:dataTable>
+			
+				</div>
+			</div>
+		</div>
+		
+		
+		<!-- DETALHE DAS DEPESAS -->
+		<p:dialog id="receitaEquipeDialog" header="#{orcReceitaBean.tituloDialogo}" widgetVar="receitaEquipeDialogWidgetVar"
+			modal="true" resizable="false" closeOnEscape="true">
+			
+			<p:messages id="receitaEquipeMessages"/>
+			
+			<h:panelGrid id="receitaEquipePanelGrid" columns="1"
+				rendered="#{orcReceitaBean.operacao eq 1}">
+				
+				<h:panelGrid columns="2" columnClasses="colunaEsquerda,colunaDireita">
+					<p:outputLabel value="Receita: "/>
+					<h:panelGroup>
+						<h:outputText value="#{orcReceitaBean.orcReceita.receita.sgReceita} - 
+						#{orcReceitaBean.orcReceita.receita.categoria.dsCategoria} - 
+						#{orcReceitaBean.orcReceita.receita.dsReceita}" styleClass="textoNegrito"/>
+					</h:panelGroup>
+					
+					<p:outputLabel value="Conta Contábil: "/>
+					<h:panelGroup>
+						<h:outputText value="#{orcReceitaBean.orcReceita.receita.contaReceita.cdConta} - 
+							#{orcReceitaBean.orcReceita.receita.contaReceita.dsConta}" styleClass="textoNegrito"/>
+					</h:panelGroup>
+				</h:panelGrid>
+				
+				
+				<p:scrollPanel mode="native" style="height:300px">
+				
+					<p:dataTable id="despesasDataTable" style="width:970px;"  
+						value="#{orcReceitaBean.orcReceita.listaDespesas}"
+						var="item" emptyMessage="Nenhuma informação a ser exibida">
+						
+						<p:columnGroup type="header">
+							<p:row>  
+					            <p:column headerText="Conta" width="20%"/>  
+					            <p:column headerText="Descrição"/>  
+					            <p:column headerText="Tipo" width="10%"/>  
+					            <p:column headerText="Percentual" width="8%" style="text-align: right;"/>  
+					            <p:column headerText="Valor" width="15%" style="text-align: right;"/>  
+					        </p:row>
+					        
+					        <p:row>
+								<p:column colspan="4" headerText="Valor da Receita:" styleClass="direita"/>
+								<p:column style="text-align: right">
+									<f:facet name="header">
+										<h:outputText value="#{orcReceitaBean.orcReceita.valorUnitario}">
+											<f:convertNumber type="number" pattern="#,##0.00"/>
+										</h:outputText>
+									</f:facet>
+								</p:column>
+							</p:row>
+							
+							<p:row>
+								<p:column colspan="4" headerText="Total de Deduções e Custos:" styleClass="direita"/>
+								<p:column style="text-align: right">
+									<f:facet name="header">
+										<h:outputText value="#{orcReceitaBean.orcReceita.valorDespesa}">
+											<f:convertNumber type="number" pattern="#,##0.00"/>
+										</h:outputText>
+									</f:facet>
+								</p:column>
+							</p:row>
+							
+							<p:row>
+								<p:column colspan="4" headerText="Lucro Bruto:" styleClass="direita"/>
+								<p:column style="text-align: right">
+									<f:facet name="header">
+										<h:outputText value="#{orcReceitaBean.orcReceita.lucroBruto}">
+											<f:convertNumber type="number" pattern="#,##0.00"/>
+										</h:outputText>
+									</f:facet>
+								</p:column>
+							</p:row>  
+						</p:columnGroup>
+						
+						<p:column>
+							<h:outputText value="#{item.conta.cdConta}" style="font-weight: bold;"/>
+						</p:column>
+						
+						<p:column>
+							<h:outputText value="#{item.conta.dsConta}"/>
+						</p:column>
+						
+						<p:column>
+							<h:outputText value="#{item.conta.tipo.descricao}"/>
+						</p:column>
+						
+						<p:column style="text-align: right;">
+							<h:outputText id="percDespesa" value="#{item.percDespesa}%">
+								<f:convertNumber type="number" minFractionDigits="2" maxFractionDigits="2"/>
+							</h:outputText>
+						</p:column>
+										
+						<p:column style="text-align: right;">
+							<h:outputText id="valorDespesa" value="#{item.valorDespesa}">
+								<f:convertNumber type="number" minFractionDigits="2"/>
+							</h:outputText>
+						</p:column>										
+					</p:dataTable>
+					
+				</p:scrollPanel>
+			</h:panelGrid>
+			
+			<h:panelGrid id="detalheEquipePanelGrid" columns="1"
+				rendered="#{orcReceitaBean.operacao eq 2}">
+				
+				<h:selectOneListbox size="10" 
+					style="font-family: monospace; font-size:12px">
+					<f:selectItems value="#{orcReceitaBean.detalhesVendedor}"/>
+				</h:selectOneListbox>
+			</h:panelGrid>
+			
+		</p:dialog>
+			
+	</h:form>		
+</ui:define>
+
+<ui:define name="rodape">1.0.0</ui:define>
+
+</ui:composition>

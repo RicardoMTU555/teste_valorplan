@@ -1,0 +1,171 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+    xmlns:h="http://java.sun.com/jsf/html"
+    xmlns:f="http://java.sun.com/jsf/core"
+    xmlns:ui="http://java.sun.com/jsf/facelets"
+    xmlns:p="http://primefaces.org/ui">
+
+<style type="text/css">
+.bloco0 {
+	width: 1000px;
+}
+
+.bloco1 {
+	padding-right: 5px;
+	padding-left: 3px;
+	margin-top: 5px;
+}
+
+.bloco1a {
+	padding-right: 5px;
+	padding-left: 20px;
+	margin-top: 5px;
+	height: 410px;
+	overflow-y: auto; 
+}
+
+.bloco2 {
+	padding-right: 3px;
+	padding-left: 5px;
+	margin-top: 5px;
+}
+
+</style>
+
+	<p:dialog id="relacionaDialog" header="Classificação X Conta X Centro de Custo" widgetVar="relacionaDialogWidgetVar"
+			modal="true" resizable="true" closeOnEscape="true">
+		
+		<p:growl id="relacionaMessages" />
+		
+		<div class="bloco0">
+			<div class="ui-grid  ui-grid-responsive">
+				<div class="ui-grid-row">
+
+					<!-- CABEÇALHO 1: IDENTIFICAÇÃO DA CONTA -->
+
+					<div class="ui-grid-col-6 bloco1">
+						<h:panelGrid id="dadosPG" columns="1">
+							
+							<h:panelGroup>
+								<h:outputText value="Classificação DRE:" style="padding-right: 5px"/>
+								<h:outputText value="#{classificacaoCtbBean.classeConta.dsClasse}" styleClass="textoNegrito"/>
+							</h:panelGroup>
+	
+							<h:panelGroup>
+								<h:outputText value="Posição do Nivel:" style="padding-right: 5px" />
+								<h:outputText value="#{classificacaoCtbBean.classeConta.cdNivelClasse}" styleClass="textoNegrito"/>
+							</h:panelGroup>
+	
+							<h:panelGroup>
+								<h:outputText value="Conta Selecionada: " style="padding-right: 5px"/>
+								<h:outputText value="#{classificacaoCtbBean.conta.dsConta}" styleClass="textoNegrito"/>
+							</h:panelGroup>
+						</h:panelGrid>
+							
+					</div>
+
+					<!-- CABEÇALHO 2: BOTÕES -->
+
+					<div class="ui-grid-col-6 bloco2">
+						<h:panelGrid id="acoesPG" columns="2">
+							<h:outputText value="Utiliza Setor"/>
+
+							<p:selectOneRadio id="ubilizaSetorRadio" value="#{classificacaoCtbBean.classeSetor.utilizaSetor}" unselectable="true">
+					            <f:selectItem itemLabel="Sim" itemValue="true" />
+					            <f:selectItem itemLabel="Não" itemValue="false" />
+					            
+					        	<p:ajax update="frm:cencustoDataTable"/>
+					        		
+							</p:selectOneRadio>
+							
+							<h:outputText id="quantSetores" 
+								value="#{classificacaoCtbBean.classeSetor.quantSetoresSelecionados} setores selecionados"/>
+							
+							<h:panelGroup>
+								<p:commandButton id="desmarcarCB" value="Desmarcar" icon="fa fa-check-square-o"
+									disabled="#{classificacaoCtbBean.eloSelec eq null}"
+									title="Desmarca todos os registros"
+									actionListener="#{classificacaoCtbBean.desmarcarSetores}"
+									process="@this" 
+									update="frm:cencustoDataTable frm:quantSetores"
+									/>
+									
+								<p:commandButton id="gravarCB" value="Gravar" icon="fa fa-save"
+									disabled="#{classificacaoCtbBean.eloSelec eq null}"
+									title="Salva as alterações na lista"
+									actionListener="#{classificacaoCtbBean.salvarClaConta}"
+									process="@this frm:cencustoDataTable" 
+									update="relacionaMessages placonTree"/>
+	
+								<p:commandButton value="Retornar" icon="fa fa-undo"
+									oncomplete="if (!args.validationFailed) PF('relacionaDialogWidgetVar').hide()"
+									process="@this"/>
+							</h:panelGroup>
+						</h:panelGrid>
+					</div>
+				</div>
+			
+				<div class="ui-grid-row">
+
+					<!-- DETALHA 1 : PLANO DE CONTAS -->
+
+					<div class="ui-grid-col-6 bloco1a">
+						<p:tree id="placonTree" value="#{classificacaoCtbBean.raiz}" var="item"
+							style="width: 100%; border: 0"
+							selectionMode="single" selection="#{classificacaoCtbBean.eloSelec}">
+					        
+					        <p:treeNode expandedIcon="fa fa-folder-open-o" collapsedIcon="fa fa-folder">
+					            <h:outputText value="#{item.cdConta} - #{item.dsConta}"/>
+					        </p:treeNode>
+					        
+					        <p:treeNode type="analitica" icon="#{item.seleciona ? 'fa fa-check-circle' : 'fa fa-circle-thin'}">
+					            <h:outputText value="#{item.cdConta} - #{item.dsConta}" style="color: blue" rendered="#{item.seleciona}"/>
+					            <h:outputText value="#{item.cdConta} - #{item.dsConta}" rendered="#{!item.seleciona}"/>
+					        </p:treeNode>
+					        
+					        <p:ajax event="select" listener="#{classificacaoCtbBean.listarCencustoSelecionados}" 
+					        	process="@this frm:ubilizaSetorRadio"
+								update="frm:cencustoPanelGrid frm:dadosPG frm:acoesPG" />		
+						</p:tree>
+					</div>
+				
+					<!-- DETALHA 2 : CENTROS DE CUSTO -->
+				
+					<div class="ui-grid-col-6 bloco2">
+						<h:panelGrid id="cencustoPanelGrid">
+						
+							<p:dataTable id="cencustoDataTable"  
+								value="#{classificacaoCtbBean.classeSetor.setores}"
+								var="item" emptyMessage="Nenhuma informação a ser exibida"
+								style="font-size: 10px; width: 100%"
+								scrollable="true" scrollHeight="355">
+									
+								<p:column headerText="Sel" width="9%" sortBy="#{item.seleciona}" styleClass="central">
+									<p:selectBooleanCheckbox value="#{item.seleciona}">
+										<p:ajax listener="#{classificacaoCtbBean.marcaSetor(item)}" update="frm:quantSetores"/>
+									</p:selectBooleanCheckbox>
+									
+								</p:column>
+					
+								<p:column headerText="Centro Custo" width="20%" sortBy="#{item.codExterno}">
+									<h:outputText value="#{item.codExterno}"/>
+								</p:column>
+								
+								<p:column headerText="Descrição" sortBy="#{item.cecDsResumida}">
+									<h:outputText value="#{item.cecDsResumida}" title="#{item.cecDsCompleta}"/>
+								</p:column>
+								
+								<p:column headerText="Filial" width="23%" sortBy="#{item.filial.sgFilial}">
+									<h:outputText value="#{item.filial.sgFilial}"/>
+								</p:column>
+								
+							</p:dataTable>
+						</h:panelGrid>
+						
+					</div>
+				</div>
+			</div>
+		</div>
+		
+	</p:dialog>
+  	
+</ui:composition>

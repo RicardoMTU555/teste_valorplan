@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+ 	xmlns:h="http://xmlns.jcp.org/jsf/html"
+ 	xmlns:f="http://xmlns.jcp.org/jsf/core"
+ 	xmlns:p="http://primefaces.org/ui"
+ 	xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+ 	template="/WEB-INF/templates/Layout.xhtml">
+
+<ui:define name="titulo">Contas Estornáveis no DRE</ui:define>
+
+<ui:define name="conteudo">
+
+	<f:metadata>
+		<f:viewAction action="#{loginBean.validarPermissao('14;')}"/>
+		<f:viewAction action="#{cadEstornoContaBean.iniciar}"/>
+	</f:metadata>
+
+	<h:form id="frm">
+		<p:messages id="messages" />
+
+		<p:toolbar id="cadToolbar">
+			<f:facet name="left">
+				<p:commandButton value="Incluir" icon="fa fa-plus"
+					title="Inclui novo Tipo de Receita"
+					actionListener="#{cadEstornoContaBean.incluir}"
+					process="@this"
+					update="contasDataTable frm:messages" />
+
+				<p:commandButton value="Salvar" icon="fa fa-save"
+					title="Grava as alterações efetuadas"
+					actionListener="#{cadEstornoContaBean.salvar}"
+					process="@this frm:contasDataTable"
+					update="contasDataTable frm:messages" />
+			</f:facet>
+		</p:toolbar>
+		
+		<p:spacer height="10"/>
+			
+		<p:dataTable id="contasDataTable" style="width: 100%" value="#{cadEstornoContaBean.listaContas}"
+			var="item" emptyMessage="Nenhuma informação a ser exibida"
+			reflow="true"
+			rowHover="true">
+					
+			<p:column headerText="Remove" width="10%" styleClass="central">
+				<p:commandLink 
+					action="#{cadEstornoContaBean.excluir}"
+					process="@this"
+					update="frm:messages contasDataTable">
+					
+					<f:setPropertyActionListener value="#{item}"
+						target="#{cadEstornoContaBean.conta}"/>
+					
+					<h:graphicImage value="../resources/ctbli9/images/delete.png"
+						title="Excluir Item"/>
+						
+					<p:confirm icon="ui-icon-alert" header="Confirmação de Exclusão" 
+	            		message="Posso remover a conta deste cadastro?" />
+				</p:commandLink>	
+			</p:column>
+					
+			<p:column headerText="Conta Contábil a estornar">
+				<p:selectOneMenu id="conta" value="#{item.conta}" rendered="#{item.conta eq null}"
+					filter="true" filterMatchMode="contains"> 
+					
+					<f:selectItems value="#{cadEstornoContaBean.listaPlacon}" var="pla"
+						itemValue="#{pla}" itemLabel="#{pla.cdConta} | #{pla.dsConta}"/>
+						
+					<p:ajax event="change" process="@this"/>
+				</p:selectOneMenu>
+				
+				<h:outputText value="#{item.conta.cdConta} | #{item.conta.dsConta}" rendered="#{item.conta ne null}"/>
+			</p:column>
+			
+			<p:column headerText="Centro de Custo a receber o estorno">
+				<p:selectOneMenu id="cenCustoRequis" value="#{item.cenCusto}"
+					filter="true" filterMatchMode="contains">
+					
+					<f:selectItems value="#{cadEstornoContaBean.listaCentroCusto}" var="set"
+						itemLabel="#{set.codExterno} | #{set.cecDsResumida}" itemValue="#{set}"/>
+						
+					<p:ajax event="change" process="@this"/>
+				</p:selectOneMenu>
+			</p:column>
+			
+		</p:dataTable>
+			
+	</h:form>		
+</ui:define>
+
+<ui:define name="rodape">1.0.0</ui:define>
+
+</ui:composition>

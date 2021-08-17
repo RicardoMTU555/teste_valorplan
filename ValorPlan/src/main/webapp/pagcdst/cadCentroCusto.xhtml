@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+ 	xmlns:h="http://xmlns.jcp.org/jsf/html"
+ 	xmlns:f="http://xmlns.jcp.org/jsf/core"
+ 	xmlns:p="http://primefaces.org/ui"
+ 	xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+ 	template="/WEB-INF/templates/Layout.xhtml">
+
+<ui:define name="titulo">Cadastro de Centros de Custo</ui:define>
+
+<ui:define name="conteudo">
+
+<style type="text/css">
+.bloco {
+	width: 400px;
+	height: 420px;
+	overflow-y: auto;
+	font-size: .9em;
+}
+</style>
+
+	<f:metadata>
+		<f:viewAction action="#{loginBean.validarPermissao('6;')}" />
+	</f:metadata>
+
+	<h:form id="frm">
+		<p:growl id="messages" />
+		
+		<p:accordionPanel id="filtroAccordion">
+			<p:tab title="Filtro Centro de custo">
+				<p:panel>
+					<h:panelGrid id="filtroPanelgrid" style="width:100%" columns="4"
+						columnClasses="direita, esquerda, direita, esquerda">
+
+						<p:outputLabel for="filtroDescrResumida" value="Descrição Resumida:"/>
+						<p:inputText id="filtroDescrResumida" placeholder="Parte da Descrição..." size="20"
+							value="#{cencusBean.filtro.descrResumida}" />
+							
+						<p:outputLabel value="Áreas:"/>
+				        <p:selectCheckboxMenu value="#{cencusBean.filtro.areas}" label="Selecione áreas para filtro">
+				            <f:selectItems value="#{cencusBean.tiposArea}" var="area"
+								itemLabel="#{area.descricao}" itemValue="#{area}"/>	
+				        </p:selectCheckboxMenu>
+		
+					</h:panelGrid>
+				</p:panel>
+			</p:tab>
+		</p:accordionPanel>
+		
+		<p:toolbar id="cadToolbar">
+			<f:facet name="left">
+				<p:commandButton value="Pesquisar" icon="fa fa-search"
+					title="Lista os centros de custo que atendem ao critério de filtro selecionado" 
+					actionListener="#{cencusBean.listarCentroCusto}" update="cadDataTable messages"
+					process="@this frm:filtroAccordion"/>
+				
+				<span class="ui-separator">
+	                <span class="ui-icon ui-icon-grip-dotted-vertical" />
+	            </span>
+	            
+	            <p:commandButton value="Incluir" icon="fa fa-plus"
+	            	title="Inclui um novo centro de custo"
+	            	actionListener="#{cencusBean.inicializarRegistro}" 
+	            	oncomplete="PF('cadDialogWidgetVar').show()"
+	            	update="cadDialog" process="@this">
+	            	<p:resetInput target="cadDialog"/>
+	            </p:commandButton>
+	
+				<span class="ui-separator">
+	                <span class="ui-icon ui-icon-grip-dotted-vertical" />
+	            </span>
+	            
+	            <p:commandButton value="Editar" icon="fa fa-edit"
+	            	title="Altera o registro selecionado" 
+	            	disabled="#{not cencusBean.itemSelecionado}"
+	            	actionListener="#{cencusBean.alterarRegistro}"
+	            	oncomplete="PF('cadDialogWidgetVar').show()"
+	            	update="cadDialog" process="@this">
+	            	<p:resetInput target="cadDialog"/>
+	            </p:commandButton>
+	
+	            <p:commandButton value="Excluir" icon="fa fa-trash"
+	            	title="Exclui o registro selecionado" 
+	            	disabled="#{not cencusBean.itemSelecionado}"
+	            	actionListener="#{cencusBean.excluir}"
+	            	update="messages cadDataTable cadToolbar"
+					process="@this">
+	            	<p:confirm icon="ui-icon-alert" header="Confirmação de Exclusão" 
+	            		message="Deseja Excluir a cidade?" />
+	            </p:commandButton>
+	            
+				<span class="ui-separator">
+	                <span class="ui-icon ui-icon-grip-dotted-vertical" />
+	            </span>
+	            
+	            <p:commandButton title="Gera Planilha Excel" icon="fa fa-file-excel-o"
+	            	ajax="false">
+	            	<p:dataExporter type="xls" target="cadDataTable" fileName="PlanilhaCentroCusto" />
+	            </p:commandButton>
+			</f:facet>
+			
+			<f:facet name="right">
+				<h:outputText value="Ano Referência: "/>
+				<p:inputMask id="nrAno" mask="9999" value="#{cencusBean.anoReferencia.ano}" size="4">
+					<p:ajax event="blur" listener="#{cencusBean.limparTela}" process="nrAno" 
+					update="frm:cadToolbar frm:cadDataTable"/>
+				</p:inputMask>
+			</f:facet>
+		</p:toolbar>
+
+		<p:spacer height="10" />
+		
+		<p:dataTable id="cadDataTable" value="#{cencusBean.listaCentroCusto}" 
+			var="item" emptyMessage="Nenhuma informação a ser exibida"
+			scrollable="true" scrollHeight="350"
+			selectionMode="single" selection="#{cencusBean.centroCusto}" rowKey="#{item.cdCentroCusto}"
+			reflow="true">
+				
+			<p:ajax event="rowSelect" update="frm:cadToolbar" />
+			<p:ajax event="rowUnselect" update="frm:cadToolbar" />
+			
+			<p:column headerText="Código" width="7%" sortBy="#{item.codExterno}">
+				<h:outputText value="#{item.codExterno}"/>
+			</p:column>
+				
+			<p:column headerText="Descrição" sortBy="#{item.cecDsResumida}">
+				<h:outputText value="#{item.cecDsResumida}" />
+			</p:column>
+			
+			<p:column headerText="Filial" width="10%" sortBy="#{item.filial.sgFilial}">
+				<h:outputText value="#{item.filial.sgFilial}" />
+			</p:column>
+			
+			<p:column headerText="Departamento" width="15%">
+				<p:commandLink
+					title="Mostra estrutura organizacional"
+					action="#{depArvoreBean.carregarArvoreDepto(cencusBean.anoReferencia.ano, 
+							cencusBean.centroCusto.departamento.cdDepartamento, 'GRAVA')}"
+					process="@this"
+					update="frm:arvoreDialog"
+					oncomplete="PF('arvoreDialogWidgetVar').show()">
+											
+					<f:setPropertyActionListener value="#{item}" target="#{cencusBean.centroCusto}"/>
+					
+					<h:outputText value="#{item.departamento.sgDepartamento}" />	
+				</p:commandLink>
+			</p:column>		
+			
+			<p:column headerText="Área" width="10%">
+				<h:outputText value="#{item.tipoArea.descricao}" />
+			</p:column>	
+			
+			<p:column headerText="Gestor" width="40%">
+				<h:outputText value="#{item.responsavel.nomeVinculo}" />
+			</p:column>	
+											
+		</p:dataTable>
+		
+		<p:dialog id="cadDialog" header="Centro de Custo" widgetVar="cadDialogWidgetVar"
+			modal="true" resizable="false" closeOnEscape="true">
+			<p:messages id="registroMessages"/>
+			
+			<p:defaultCommand target="salvarCommandButton" scope="cadDialog" />
+		
+			<h:panelGrid id="registroPanelGrid" columns="2" 
+				rendered="#{cencusBean.centroCusto ne null}">
+				
+				<p:outputLabel value="Código interno:" for="cdCentroCusto"/>
+				<h:outputText id="cdCentroCusto" styleClass="textoNegrito"  
+					value="#{cencusBean.centroCusto.cdCentroCusto}" />
+					
+				<p:outputLabel value="Filial:"/>
+						
+				<p:selectOneMenu value="#{cencusBean.centroCusto.filial}" >
+					<f:selectItems value="#{cencusBean.filiais}" var="emp"
+						itemValue="#{emp}" itemLabel="#{emp.sgFilial}"/>
+				</p:selectOneMenu>
+					
+				<p:outputLabel value="Departamento:"/>
+				<h:panelGroup>
+					<h:outputText id="dsDepartamento" value="#{cencusBean.centroCusto.departamento.dsDepartamento}"
+						styleClass="textoNegrito"
+						style="margin-right: 10px"/>
+					
+					
+					<p:commandButton value="Árvore" icon="fa fa-edit"
+		            	title="Seleciona o departamento ao qual este centro de custo estará relacionado" 
+		            	actionListener="#{depArvoreBean.carregarArvoreDepto(cencusBean.anoReferencia.ano, 
+		            				cencusBean.centroCusto.departamento.cdDepartamento, 'SELECIONA')}"
+		            	oncomplete="PF('arvoreDialogWidgetVar').show()"
+		            	update="frm:arvoreDialog" process="@this">
+		            	<p:resetInput target="frm:arvoreDialog"/>
+		            </p:commandButton>
+				</h:panelGroup>
+								
+				<p:outputLabel value="Referência Externa:" for="codExterno"/>
+				<p:inputText id="codExterno" size="15" maxlength="15" 
+					value="#{cencusBean.centroCusto.codExterno}"/>
+				
+				<p:outputLabel value="Descrição Resumida:" for="cecDsResumida"/>
+				<p:inputText id="cecDsResumida" size="30" maxlength="30" 
+					value="#{cencusBean.centroCusto.cecDsResumida}"/>
+					
+				<p:outputLabel value="Descrição Completa:" for="cecDsCompleta"/>
+				<p:inputText id="cecDsCompleta" size="100" maxlength="100" 
+					value="#{cencusBean.centroCusto.cecDsCompleta}"/>
+				
+				<p:outputLabel value="Gestor Responsável:" for="funcLider"/>
+				
+				<p:selectOneMenu id="funcLider" value="#{cencusBean.centroCusto.responsavel}" var="func2"
+					filter="true" filterMatchMode="contains">
+					
+					<f:selectItem itemLabel="Selecione..."/>
+					<f:selectItems value="#{cencusBean.listaRecurso}" var="func"
+						itemLabel="#{func.nomeVinculo}" itemValue="#{func}"/>
+						
+						
+					<p:column headerText="Funcionario">
+						<h:outputText value="#{func2.nomeVinculo}" />
+					</p:column>
+					<p:column headerText="Setor">
+						<h:outputText value="#{func2.setor.codExterno}" />
+					</p:column>
+					<p:column headerText="Descrição">
+						<h:outputText value="#{func2.setor.cecDsResumida}" />
+					</p:column>
+				</p:selectOneMenu>
+				
+				<p:outputLabel value="Orça Categoria de Receita:" for="cdTipoReceita"/>
+				<p:selectCheckboxMenu id="cdTipoReceita" value="#{cencusBean.origensReceita}" label="Origens de receita">
+		            <f:selectItems value="#{cencusBean.listaTiposReceita}" var="tip"
+						itemValue="#{tip.cdCategoria}" itemLabel="#{tip.dsCategoria}"/>
+		        </p:selectCheckboxMenu>
+				
+				
+				<p:outputLabel value="Área do Centro de Custo:" for="tipoArea"/>
+				<p:selectOneMenu id="tipoArea" required="true"
+					value="#{cencusBean.centroCusto.tipoArea}">
+					
+					<f:selectItem itemLabel="Selecione..."/>
+					<f:selectItems value="#{cencusBean.tiposArea}" var="area"
+						itemLabel="#{area.descricao}" itemValue="#{area}"/>
+				</p:selectOneMenu>
+				
+				<h:outputLabel />
+				
+				<p:commandButton id="salvarCommandButton" value="Salvar" actionListener="#{cencusBean.salvar}"
+					update="registroPanelGrid registroMessages"
+					oncomplete="if (!args.validationFailed) PF('cadDialogWidgetVar').hide()" process="cadDialog"/>
+					
+			</h:panelGrid>		
+		</p:dialog>
+			
+			
+		<p:dialog id="arvoreDialog" header="Estrutura Organizacional" widgetVar="arvoreDialogWidgetVar"
+			modal="true" resizable="true" closeOnEscape="true">
+	
+			<h:panelGrid>
+				<H3>
+					<h:outputText value="#{cencusBean.centroCusto.codExterno} -	#{cencusBean.centroCusto.cecDsResumida}"/>
+				</H3>
+				<p:separator/>
+			</h:panelGrid>
+			<div class="bloco">
+				<p:tree value="#{depArvoreBean.root1}" var="item" nodeVar="node"
+					selectionMode="single" selection="#{depArvoreBean.selectedNode}"
+					style="width: 98%; border: 0">
+			
+			        <p:treeNode expandedIcon="fa fa-folder-open-o" collapsedIcon="fa fa-folder">
+			            <h:outputText value="#{item.dsDepartamento}"/>
+			        </p:treeNode>
+			        
+			        <p:treeNode type="ultimoNivel" icon="#{node.selected ? 'fa fa-check-circle' : 'fa fa-circle-thin'}">
+			            <h:outputText value="#{item.dsDepartamento}"/>
+			        </p:treeNode>
+			        	        
+			        <p:ajax event="select" listener="#{depArvoreBean.prepararSelecao}"
+			        	process="@this"
+			        	update="frm:arvoreToolbar"/>
+			    </p:tree>
+			</div>
+
+		
+			<p:toolbar id="arvoreToolbar">
+				<f:facet name="left">
+					            
+		            <p:commandButton value="Editar" icon="fa fa-edit"
+		            	disabled="#{depArvoreBean.itemSelecionado ne 'DEP'}"
+		            	title="Confirma a seleção do departamento"
+		            	actionListener="#{cencusBean.associarDepartamento(depArvoreBean.depto.cdDepartamento)}"
+		            	oncomplete="PF('arvoreDialogWidgetVar').hide();PF('cadDialogWidgetVar').show()"
+		            	process="@this"
+		            	update="cadDialog"
+		            	rendered="#{depArvoreBean.seleciona}">
+		            	
+		            	<p:resetInput target="cadDialog"/>
+		            </p:commandButton>
+					
+		            <p:commandButton value="Salvar" icon="fa fa-save"
+		            	disabled="#{depArvoreBean.itemSelecionado ne 'DEP'}"
+		            	title="Confirma a seleção do departamento"
+		            	actionListener="#{cencusBean.salvarCentroCustoDepartamento(depArvoreBean.depto.cdDepartamento)}"
+		            	oncomplete="PF('arvoreDialogWidgetVar').hide()"
+		            	process="@this"
+		            	update="cadDialog"
+		            	rendered="#{!depArvoreBean.seleciona}">
+		            	
+		            	<p:resetInput target="cadDialog"/>
+		            </p:commandButton>
+					
+				</f:facet>
+			</p:toolbar>
+		
+		</p:dialog>	
+		
+	</h:form>		
+</ui:define>
+
+<ui:define name="rodape">1.0.0</ui:define>
+
+</ui:composition>

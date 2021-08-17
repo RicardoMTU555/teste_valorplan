@@ -1,0 +1,280 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+    xmlns:h="http://java.sun.com/jsf/html"
+    xmlns:f="http://java.sun.com/jsf/core"
+    xmlns:ui="http://java.sun.com/jsf/facelets"
+    xmlns:p="http://primefaces.org/ui">
+
+
+	<p:dialog id="deducoesDialog" header="Deduções da Receita" widgetVar="deducoesDialogWidgetVar"
+			modal="true" resizable="true" closeOnEscape="false" onShow="configurarMoeda()">
+		
+		<p:messages id="deducoesMessages" />
+
+		<h:panelGrid id="filtroPG" columns="2" columnClasses="colunaEsquerda,colunaDireita">
+			<p:outputLabel value="Colaborador: "/>
+			<p:selectOneMenu id="vendedor" value="#{despesaVendaBean.funcionario}" var="func2"
+				filter="true" filterMatchMode="contains">
+				
+				<f:selectItem itemLabel="Selecione..."/>
+				<f:selectItems value="#{despesaVendaBean.funcionarios}" var="func" itemValue="#{func}" itemLabel="#{func.nmFuncionario}"/>
+				
+				<p:column headerText="Funcionario">
+					<h:outputText value="#{func2.nmFuncionario}" />
+				</p:column>
+				<p:column headerText="Setor">
+					<h:outputText value="#{func2.cenCusto.codExterno}" />
+				</p:column>
+				<p:column headerText="Descrição">
+					<h:outputText value="#{func2.cenCusto.cecDsResumida}" />
+				</p:column>
+				
+				<p:ajax event="change" 
+					process="@this" 
+					update="frm:filtroPG frm:paramDespesaToolbar frm:paramDespesaDataTable"
+					listener="#{despesaVendaBean.listarParamDespesas}" 
+					oncomplete="configurarMoeda()"/>
+			</p:selectOneMenu>
+		
+			
+			<p:outputLabel value="Centro de custo:" />
+			<h:outputText value="#{despesaVendaBean.funcionario.cenCusto.codExterno} - 
+				#{despesaVendaBean.funcionario.cenCusto.cecDsCompleta}" styleClass="textoNegrito"/>
+			
+			<p:outputLabel value="Receita:" />
+			<h:outputText value="#{despesaVendaBean.receita.sgReceita} - 
+				#{despesaVendaBean.receita.dsReceita}" styleClass="textoNegrito"/>
+				
+		</h:panelGrid>
+		
+		<p:toolbar id="paramDespesaToolbar">
+			<p:toolbarGroup align="left">
+			
+				<h:panelGrid columns="1">
+					<h:panelGroup>
+						<p:commandButton value="Salvar" icon="fa fa-save"
+			            	actionListener="#{despesaVendaBean.salvar}" 
+			            	update="deducoesMessages" 
+			            	process="@this filtroPG paramDespesaDataTable"
+			            	disabled="#{!despesaVendaBean.parametroSelecionado}"/>
+			                        
+						<span class="ui-separator">
+			                <span class="ui-icon ui-icon-grip-dotted-vertical" />
+			            </span>
+			                
+			            <p:commandButton value="Replica Vendedor" icon="fa fa-users"
+			            	title="Replica dados para todos os vendedores do centro de custo" 
+			            	actionListener="#{despesaVendaBean.prepararReplicacao('VEND')}"
+			            	oncomplete="PF('replicaDialogWidgetVar').show()"
+							process="@this"
+							update="frm:replicaDialog"
+							disabled="#{!despesaVendaBean.parametroSelecionado}">
+							
+							<p:resetInput target="frm:replicaDialog"/>
+			            </p:commandButton>
+			            
+			            <span class="ui-separator">
+			                <span class="ui-icon ui-icon-grip-dotted-vertical" />
+			            </span>
+			            
+			            <p:commandButton value="Replica Centro de Custo" icon="fa fa-copy"
+			            	title="Replica dados para todos os centro de custo" 
+			            	actionListener="#{despesaVendaBean.prepararReplicacao('SET')}"
+			            	oncomplete="PF('replicaDialogWidgetVar').show()"
+							process="@this"
+							update="frm:replicaDialog"
+							disabled="#{!despesaVendaBean.parametroSelecionado}">
+							
+							<p:resetInput target="frm:replicaDialog"/>
+			            </p:commandButton>
+			            
+					</h:panelGroup>
+	            </h:panelGrid>
+			</p:toolbarGroup>
+		
+		</p:toolbar>		
+
+		<p:spacer height="10" />
+		
+		<p:dataTable id="paramDespesaDataTable" style="width: 100%" value="#{despesaVendaBean.listaParDespesas}"
+				var="item" emptyMessage="Nenhuma informação a ser exibida"
+				scrollable="true" scrollHeight="350" 
+				editable="true" editMode="cell" widgetVar="cellParamDespesa"
+				rowHover="true">
+							
+			<p:column headerText="Despesa" width="10%">
+				<p:cellEditor disabled="true">
+                   <f:facet name="output"><h:outputText value="#{item.deducao.sgConta}" title="#{item.deducao.dsConta}"/></f:facet>
+                   <f:facet name="input"><p:inputText value="#{item.deducao.sgConta}" style="width:96%"/></f:facet>
+				</p:cellEditor>
+			</p:column>
+							
+			<p:column headerText="Tipo" width="6%">
+				<p:cellEditor disabled="true">
+                   <f:facet name="output"><h:outputText value="#{item.deducao.grupo.descricao}"/></f:facet>
+                   <f:facet name="input"><p:inputText value="#{item.deducao.grupo.descricao}"/></f:facet>
+				</p:cellEditor>
+			</p:column>
+							
+			<p:column headerText="% JAN" styleClass="direita" width="7%">
+				<p:cellEditor disabled="#{despesaVendaBean.mesFechado(1)}">
+                   <f:facet name="output"><h:outputText value="#{item.percDespesa[0]}"/></f:facet>
+                   <f:facet name="input">
+                   		<p:inputText value="#{item.percDespesa[0]}" id="pcdespesa0" maxlength="8" styleClass="moeda04">
+							<f:convertNumber type="number" minFractionDigits="4" maxFractionDigits="4"/>
+						</p:inputText>
+                   </f:facet>
+				</p:cellEditor>
+			</p:column>
+			
+			<p:column headerText="% FEV" styleClass="direita" width="7%">
+				<p:cellEditor disabled="#{despesaVendaBean.mesFechado(2)}">
+                   <f:facet name="output"><h:outputText value="#{item.percDespesa[1]}"/></f:facet>
+                   <f:facet name="input">
+                   		<p:inputText value="#{item.percDespesa[1]}" id="pcdespesa1" maxlength="8" styleClass="moeda04">
+							<f:convertNumber type="number" minFractionDigits="4" maxFractionDigits="4"/>
+						</p:inputText>
+                   </f:facet>
+				</p:cellEditor>
+			</p:column>
+			
+			<p:column headerText="% MAR" styleClass="direita" width="7%">
+				<p:cellEditor disabled="#{despesaVendaBean.mesFechado(3)}">
+                   <f:facet name="output"><h:outputText value="#{item.percDespesa[2]}"/></f:facet>
+                   <f:facet name="input">
+                   		<p:inputText value="#{item.percDespesa[2]}" id="pcdespesa2" maxlength="8" styleClass="moeda04">
+							<f:convertNumber type="number" minFractionDigits="4" maxFractionDigits="4"/>
+						</p:inputText>
+                   </f:facet>
+				</p:cellEditor>
+			</p:column>
+			
+			<p:column headerText="% ABR" styleClass="direita" width="7%">
+				<p:cellEditor disabled="#{despesaVendaBean.mesFechado(4)}">
+                   <f:facet name="output"><h:outputText value="#{item.percDespesa[3]}"/></f:facet>
+                   <f:facet name="input">
+                   		<p:inputText value="#{item.percDespesa[3]}" id="pcdespesa3" maxlength="8" styleClass="moeda04">
+							<f:convertNumber type="number" minFractionDigits="4" maxFractionDigits="4"/>
+						</p:inputText>
+                   </f:facet>
+				</p:cellEditor>
+			</p:column>
+			
+			<p:column headerText="% MAI" styleClass="direita" width="7%">
+				<p:cellEditor disabled="#{despesaVendaBean.mesFechado(5)}">
+                   <f:facet name="output"><h:outputText value="#{item.percDespesa[4]}"/></f:facet>
+                   <f:facet name="input">
+                   		<p:inputText value="#{item.percDespesa[4]}" id="pcdespesa4" maxlength="8" styleClass="moeda04">
+							<f:convertNumber type="number" minFractionDigits="4" maxFractionDigits="4"/>
+						</p:inputText>
+                   </f:facet>
+				</p:cellEditor>
+			</p:column>
+			
+			<p:column headerText="% JUN" styleClass="direita" width="7%">
+				<p:cellEditor disabled="#{despesaVendaBean.mesFechado(6)}">
+                   <f:facet name="output"><h:outputText value="#{item.percDespesa[5]}"/></f:facet>
+                   <f:facet name="input">
+                   		<p:inputText value="#{item.percDespesa[5]}" id="pcdespesa5" maxlength="8" styleClass="moeda04">
+							<f:convertNumber type="number" minFractionDigits="4" maxFractionDigits="4"/>
+						</p:inputText>
+                   </f:facet>
+				</p:cellEditor>
+			</p:column>
+			
+			<p:column headerText="% JUL" styleClass="direita" width="7%">
+				<p:cellEditor disabled="#{despesaVendaBean.mesFechado(7)}">
+                   <f:facet name="output"><h:outputText value="#{item.percDespesa[6]}"/></f:facet>
+                   <f:facet name="input">
+                   		<p:inputText value="#{item.percDespesa[6]}" id="pcdespesa6" maxlength="8" styleClass="moeda04">
+							<f:convertNumber type="number" minFractionDigits="4" maxFractionDigits="4"/>
+						</p:inputText>
+                   </f:facet>
+				</p:cellEditor>
+			</p:column>
+			
+			<p:column headerText="% AGO" styleClass="direita" width="7%">
+				<p:cellEditor disabled="#{despesaVendaBean.mesFechado(8)}">
+                   <f:facet name="output"><h:outputText value="#{item.percDespesa[7]}"/></f:facet>
+                   <f:facet name="input">
+                   		<p:inputText value="#{item.percDespesa[7]}" id="pcdespesa7" maxlength="8" styleClass="moeda04">
+							<f:convertNumber type="number" minFractionDigits="4" maxFractionDigits="4"/>
+						</p:inputText>
+                   </f:facet>
+				</p:cellEditor>
+			</p:column>
+			
+			<p:column headerText="% SET" styleClass="direita" width="7%">
+				<p:cellEditor disabled="#{despesaVendaBean.mesFechado(9)}">
+                   <f:facet name="output"><h:outputText value="#{item.percDespesa[8]}"/></f:facet>
+                   <f:facet name="input">
+                   		<p:inputText value="#{item.percDespesa[8]}" id="pcdespesa8" maxlength="8" styleClass="moeda04">
+							<f:convertNumber type="number" minFractionDigits="4" maxFractionDigits="4"/>
+						</p:inputText>
+                   </f:facet>
+				</p:cellEditor>
+			</p:column>
+			
+			<p:column headerText="% OUT" styleClass="direita" width="7%">
+				<p:cellEditor disabled="#{despesaVendaBean.mesFechado(10)}">
+                   <f:facet name="output"><h:outputText value="#{item.percDespesa[9]}"/></f:facet>
+                   <f:facet name="input">
+                   		<p:inputText value="#{item.percDespesa[9]}" id="pcdespesa9" maxlength="8" styleClass="moeda04">
+							<f:convertNumber type="number" minFractionDigits="4" maxFractionDigits="4"/>
+						</p:inputText>
+                   </f:facet>
+				</p:cellEditor>
+			</p:column>
+			
+			<p:column headerText="% NOV" styleClass="direita" width="7%">
+				<p:cellEditor disabled="#{despesaVendaBean.mesFechado(11)}">
+                   <f:facet name="output"><h:outputText value="#{item.percDespesa[10]}"/></f:facet>
+                   <f:facet name="input">
+                   		<p:inputText value="#{item.percDespesa[10]}" id="pcdespesa10" maxlength="8" styleClass="moeda04">
+							<f:convertNumber type="number" minFractionDigits="4" maxFractionDigits="4"/>
+						</p:inputText>
+                   </f:facet>
+				</p:cellEditor>
+			</p:column>
+			
+			<p:column headerText="% DEZ" styleClass="direita" width="7%">
+				<p:cellEditor disabled="#{despesaVendaBean.mesFechado(12)}">
+                   <f:facet name="output"><h:outputText value="#{item.percDespesa[11]}"/></f:facet>
+                   <f:facet name="input">
+                   		<p:inputText value="#{item.percDespesa[11]}" id="pcdespesa11" maxlength="8" styleClass="moeda04">
+							<f:convertNumber type="number" minFractionDigits="4" maxFractionDigits="4"/>
+						</p:inputText>
+                   </f:facet>
+				</p:cellEditor>
+			</p:column>			
+		</p:dataTable>
+	</p:dialog>
+			
+			
+			
+	<p:dialog id="replicaDialog" header="Replicação" widgetVar="replicaDialogWidgetVar"
+			modal="true" resizable="true" closeOnEscape="true">
+			
+			<h:panelGrid columns="1">
+				<h:panelGroup rendered="#{despesaVendaBean.escopoReplicacao eq 'VEND'}">
+					<h:outputText value="Replicar dados do Vendedor" styleClass="textoNegrito"/>
+					<h3><h:outputText value="#{despesaVendaBean.funcionario.nmFuncionario}"/></h3>
+					<h:outputText value="Para todos os vendedores deste Centro de Resultado?" styleClass="textoNegrito"/>
+				</h:panelGroup>
+				
+				<h:panelGroup rendered="#{despesaVendaBean.escopoReplicacao eq 'SET'}">
+					<h:outputText value="Replicar dados do Vendedor" styleClass="textoNegrito"/>
+					<h3><h:outputText value="#{despesaVendaBean.funcionario.nmFuncionario}"/></h3>
+					<h:outputText value="Alocado no Centro de Resultado" styleClass="textoNegrito"/>
+					<h3><h:outputText value="#{despesaVendaBean.funcionario.cenCusto.cecDsResumida}"/></h3>
+					<h:outputText value="Para todos os demais Centro de Resultado?" styleClass="textoNegrito"/>
+				</h:panelGroup>
+				
+				<p:commandButton id="replicarCB" value="Confirma"
+					actionListener="#{despesaVendaBean.replicarDadosVendedor}"
+					oncomplete="if (!args.validationFailed) PF('replicaDialogWidgetVar').hide()"
+					process="replicaDialog" />
+				
+			</h:panelGrid>
+	</p:dialog>
+  	
+</ui:composition>

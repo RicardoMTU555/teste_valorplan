@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+ 	xmlns:h="http://xmlns.jcp.org/jsf/html"
+ 	xmlns:f="http://xmlns.jcp.org/jsf/core"
+ 	xmlns:p="http://primefaces.org/ui"
+ 	xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+ 	template="/WEB-INF/templates/Layout.xhtml">
+
+<ui:define name="titulo">Importador de Arquivos</ui:define>
+
+<ui:define name="conteudo">
+	<f:metadata>
+		<f:viewAction action="#{loginBean.validarPermissao('301;')}"/>
+		<f:viewAction action="#{enviaArquivoBean.listarArquivos}"/>
+	</f:metadata>
+
+	<h:form id="frmImportador" enctype="multipart/form-data">
+		<p:messages id="messages" showSummary="true" showDetail="true"/>
+		
+		<p:panel>
+			<p:fileUpload value="#{enviaArquivoBean.uploadedFile}" mode="simple"/>
+		</p:panel>
+ 
+ 		<p:panel>
+	    	<p:commandButton id="uploadCommandButton" value="Enviar" icon="fa fa-cloud-upload"
+	    		ajax="false" 
+	    		actionListener="#{enviaArquivoBean.upload}"/>
+	    		
+			<h:outputText value=" " styleClass="padding-right: 5px"/>
+				
+			<p:dataTable value="#{enviaArquivoBean.listaArquivos}" var="item" style="width:970px;"
+				rowHover="true">
+				<p:column headerText="Arquivos a Serem Processados">
+					<h:outputText value="#{item}"/>
+				</p:column>
+			</p:dataTable>
+		</p:panel>
+			
+	</h:form>		
+</ui:define>
+
+<ui:define name="rodape">1.0.0</ui:define>
+
+</ui:composition>

@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+ 	xmlns:h="http://xmlns.jcp.org/jsf/html"
+ 	xmlns:f="http://xmlns.jcp.org/jsf/core"
+ 	xmlns:p="http://primefaces.org/ui"
+ 	xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+ 	template="/WEB-INF/templates/Layout.xhtml">
+
+<ui:define name="titulo">Comparativo Orçado X Realizado - DRE do Mês</ui:define>
+
+<ui:define name="conteudo">
+
+	<f:metadata>
+		<f:viewAction action="#{loginBean.validarPermissao('204;')}"/>
+	</f:metadata>
+
+	<h:form id="frm">
+		<p:messages id="messages" />
+		
+		<p:accordionPanel id="filtroAccordion" widgetVar="filtroAccordionWV">
+			<p:tab title="Filtro DRE - Demonstrativo do Resultado do Exercício">
+				<p:panel>
+					<h:panelGrid id="filtroPanelgrid" style="width:100%" columns="4" 
+						columnClasses="direita,esquerda,direita,esquerda">
+
+						<p:outputLabel value="Ano:" for="anoOrc"/>
+						<h:panelGroup>
+							<h:outputText id="anoOrc" value="#{consultaDreFiltroBean.anoMes.ano}" styleClass="textoNegrito"/>
+							
+							<h:outputText value="Mês Orçamento:" 
+								style="padding-left: 20px; padding-right: 5px"/>
+							<p:selectOneMenu id="mesOrc" value="#{consultaDreFiltroBean.anoMes.mes}" style="vertical-align: middle">
+								<f:selectItems value="#{consultaDreFiltroBean.anoMes.meses}"/>
+							</p:selectOneMenu>
+						</h:panelGroup>
+						
+						
+						<p:outputLabel value="Filial:"/>
+						<p:selectOneMenu value="#{consultaDreFiltroBean.filial.cdFilial}">
+							<f:selectItem itemLabel="Todas..."/>
+							<f:selectItems value="#{consultaDreFiltroBean.filiais}" var="emp"
+								itemValue="#{emp.cdFilial}" itemLabel="#{emp.sgFilial}"/>
+						</p:selectOneMenu>
+						
+						<h:outputText value="Departamento:" title="Área da empresa"/>						
+						<h:panelGrid columns="1">
+							<p:selectManyMenu id="listaAreas" value="#{consultaDreFiltroBean.areasSelecionadas}"
+								filter="true" filterMatchMode="contains" showCheckbox="true"
+					        	style="width: 270px" scrollHeight="200">
+					            
+								<f:selectItems value="#{consultaDreFiltroBean.listaAreas}" var="item"
+									itemValue="#{item.cdDepartamento}" itemLabel="#{item.sgDepartamento}" />
+									
+								<p:ajax listener="#{consultaDreFiltroBean.selecionarSetores}" 
+									process="listaAreas" 
+									update="listaSetores"/>
+					        </p:selectManyMenu>
+							<h:panelGroup>
+						        <p:selectBooleanCheckbox value="#{consultaDreFiltroBean.selectAllDepto}">
+							        <p:ajax process="@this" listener="#{consultaDreFiltroBean.processarDeptos}" 
+							        	update="listaAreas listaSetores" />
+							    </p:selectBooleanCheckbox>
+						        <p:outputLabel value="Seleciona" style="padding-left: 5px"/>
+					        </h:panelGroup>
+						</h:panelGrid>
+						
+						 
+						<h:outputText value="Centros de Custo:"/>
+						<h:panelGrid columns="1">
+							<p:selectManyMenu id="listaSetores" value="#{consultaDreFiltroBean.setoresSelecionados}"
+								filter="true" filterMatchMode="contains" showCheckbox="true"
+					        	style="width: 270px" scrollHeight="200">
+					            
+								<f:selectItems value="#{consultaDreFiltroBean.listaSetores}" var="item"
+									itemValue="#{item.cdCentroCusto}" itemLabel="#{item.codExterno}-#{item.cecDsResumida}"/>
+														            
+					        </p:selectManyMenu>
+					        
+					        <h:panelGroup>
+						        <p:selectBooleanCheckbox value="#{consultaDreFiltroBean.selectAllSetor}">
+							        <p:ajax process="@this" listener="#{consultaDreFiltroBean.processarSetores}" update="listaSetores" />
+							    </p:selectBooleanCheckbox>
+						        <p:outputLabel value="Seleciona" style="padding-left: 5px"/>
+					        </h:panelGroup>
+						</h:panelGrid>
+					    
+					</h:panelGrid>
+				</p:panel>
+			</p:tab>
+		</p:accordionPanel>	
+		
+		<p:toolbar id="botoesToolBar" style="margin-top: 5px; margin-bottom: 9px">
+			<f:facet name="left">
+				<p:commandButton value="Listar" icon="fa fa-cog"
+					actionListener="#{consultaDreFiltroBean.listarDRE(1)}"
+					process="@this frm:filtroAccordion:filtroPanelgrid"
+					update="botoesToolBar frm:messages frm:dreTreeTable"
+					oncomplete="configurarMoeda(); PF('filtroAccordionWV').unselect(0)"
+					styleClass="margemBotao"/>
+					
+				<p:commandButton id="excelButton" value="Excel" icon="fa fa-file-excel-o" ajax="true" process="@this"
+					title="Gera planilha de saldos de contas"
+					rendered="#{consultaDreFiltroBean.excelGerado}"
+					actionListener="#{consultaDreFiltroBean.baixarPlanilhaLinear}" 
+					onclick="PrimeFaces.monitorDownload(start, stop);">
+					
+				     <p:fileDownload value="#{consultaDreFiltroBean.file}" />
+		
+				</p:commandButton>
+			</f:facet>
+		</p:toolbar>	
+		
+		<p:treeTable id="dreTreeTable" value="#{consultaDreFiltroBean.root1}" var="item" nodeVar="elo"
+			rowStyleClass="#{item.tipo eq 'TOT' ? 'textoNegrito' : ''}"
+			style="margin-top: 10px"
+			selectionMode="single" selection="#{consultaDreFiltroBean.selectedNode}">
+	        
+	        <p:column headerText="Conta" style="width:35%" styleClass="fundoAzulCinza">
+				<h:outputText value="#{item.descricao}"/>
+			</p:column>
+			
+			<p:column headerText="Orçado" style="width:10%" styleClass="direita">
+				<h:outputText value="#{item.valorOrcado[consultaDreFiltroBean.posicaoMes]}" 
+					style="color: #{item.valorOrcado[consultaDreFiltroBean.posicaoMes] >= 0 ? 'blue' : 'red'}">
+					<f:convertNumber pattern="#,##0.00"/>
+				</h:outputText>
+				<h:outputText value="%" rendered="#{item.tipo eq 'PER'}"/>
+			</p:column>
+
+			<p:column headerText="Realizado" style="width:10%" styleClass="direita">
+				<h:outputText value="#{item.valorRealizado[consultaDreFiltroBean.posicaoMes]}" 
+					style="color: #{item.valorRealizado[consultaDreFiltroBean.posicaoMes] >= 0 ? 'blue' : 'red'}">
+					<f:convertNumber pattern="#,##0.00"/>
+				</h:outputText>
+				<h:outputText value="%" rendered="#{item.tipo eq 'PER'}"/>
+			</p:column>
+
+			<p:column headerText="Variação" style="width:5%" styleClass="direita">
+				<h:outputText value="#{item.obtemPercent(consultaDreFiltroBean.posicaoMes)}">
+					<f:convertNumber pattern="#,##0.00"/>
+				</h:outputText>
+				<h:outputText value="%"/>
+			</p:column>
+			
+			<p:column headerText="Orçado Acumulado" style="width:10%" styleClass="direita">
+				<h:outputText value="#{item.valorOrcadoAcum}" style="color: #{item.valorOrcadoAcum >= 0 ? 'blue' : 'red'}">
+					<f:convertNumber pattern="#,##0.00"/>
+				</h:outputText>
+				<h:outputText value="%" rendered="#{item.tipo eq 'PER'}"/>
+			</p:column>
+
+			<p:column headerText="Realizado Acumulado" style="width:10%" styleClass="direita">
+				<h:outputText value="#{item.valorRealizadoAcum}" style="color: #{item.valorRealizadoAcum >= 0 ? 'blue' : 'red'}">
+					<f:convertNumber pattern="#,##0.00"/>
+				</h:outputText>
+				<h:outputText value="%" rendered="#{item.tipo eq 'PER'}"/>
+			</p:column>
+
+			<p:column headerText="Variação" style="width:5%" styleClass="direita">
+				<h:outputText value="#{item.percentAcum}">
+					<f:convertNumber pattern="#,##0.00"/>
+				</h:outputText>
+				<h:outputText value="%"/>
+			</p:column>
+	    </p:treeTable>
+	    
+	</h:form>		
+</ui:define>
+
+<ui:define name="rodape">1.0.0</ui:define>
+
+</ui:composition>

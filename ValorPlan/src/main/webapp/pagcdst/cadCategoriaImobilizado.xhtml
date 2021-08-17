@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+ 	xmlns:h="http://xmlns.jcp.org/jsf/html"
+ 	xmlns:f="http://xmlns.jcp.org/jsf/core"
+ 	xmlns:p="http://primefaces.org/ui"
+ 	xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+ 	template="/WEB-INF/templates/Layout.xhtml">
+
+<ui:define name="titulo">Categoria de Imobilizado</ui:define>
+
+<ui:define name="conteudo">
+
+	<f:metadata>
+		<f:viewAction action="#{loginBean.validarPermissao('12;')}" />
+		<f:viewAction action="#{catImobiliBean.listarTudo}" />
+	</f:metadata>
+
+	<h:form id="frm">
+		<p:messages id="messages" />
+		
+		<p:toolbar id="cadToolbar">
+			<f:facet name="left">
+				<p:inputText id="termoPesquisa"
+					placeholder="Digite parte do nome..." size="30"
+					value="#{catImobiliBean.termoPesquisa}" />
+
+				<p:commandButton value="Pesquisar" icon="fa fa-search"
+					actionListener="#{catImobiliBean.listarFiltro}"
+					update="cadDataTable messages" process="@this termoPesquisa" />
+
+				<span class="ui-separator"> <span
+					class="ui-icon ui-icon-grip-dotted-vertical" />
+				</span>
+
+				<p:commandButton value="Incluir" icon="fa fa-plus"
+					title="Inclui nova Categoria"
+					actionListener="#{catImobiliBean.inicializarRegistro}"
+					oncomplete="PF('cadDialogWidgetVar').show()"
+					update="cadDialog" process="@this">
+					<p:resetInput target="cadDialog" />
+				</p:commandButton>
+
+				<span class="ui-separator"> <span
+					class="ui-icon ui-icon-grip-dotted-vertical" />
+				</span>
+
+				<p:commandButton value="Editar" icon="fa fa-edit"
+					title="Altera o registro selecionado"
+					disabled="#{not catImobiliBean.itemSelecionado}"
+					actionListener="#{catImobiliBean.alterarRegistro}"
+					oncomplete="PF('cadDialogWidgetVar').show()"
+					update="cadDialog" process="@this">
+					<p:resetInput target="cadDialog" />
+				</p:commandButton>
+
+				<p:commandButton value="Excluir" icon="fa fa-trash"
+					title="Exclui o registro selecionado"
+					disabled="#{not catImobiliBean.itemSelecionado}"
+					actionListener="#{catImobiliBean.excluir}"
+					update="messages cadDataTable cadToolbar" process="@this">
+					<p:confirm icon="ui-icon-alert" header="Confirmação de Exclusão"
+						message="Deseja Excluir a Categoria?" />
+				</p:commandButton>
+
+				<span class="ui-separator"> <span
+					class="ui-icon ui-icon-grip-dotted-vertical" />
+				</span>
+
+				<p:commandButton title="Gera Planilha Excel"
+					icon="fa fa-file-excel-o" ajax="false">
+					<p:dataExporter type="xls" target="cadDataTable"
+						fileName="PlanilhaCategImobilizado" />
+				</p:commandButton>
+			</f:facet>
+		</p:toolbar>
+
+		<p:spacer height="10" />
+
+		<p:dataTable id="cadDataTable" style="width:970px;"
+			value="#{catImobiliBean.listaCategImob}" var="item"
+			emptyMessage="Nenhuma informação a ser exibida" paginator="true"
+			rows="15" paginatorPosition="bottom" selectionMode="single"
+			selection="#{catImobiliBean.categImobilizado}" rowKey="#{item.cdCategImobili}"
+			reflow="true">
+
+			<p:ajax event="rowSelect" update="frm:cadToolbar" />
+			<p:ajax event="rowUnselect" update="frm:cadToolbar" />
+
+			<p:column headerText="Código" width="10%"
+				sortBy="#{item.cdCategImobili}">
+				<h:outputText value="#{item.cdCategImobili}" />
+			</p:column>
+
+			<p:column headerText="Descrição" sortBy="#{item.dsCategImobili}">
+				<h:outputText value="#{item.dsCategImobili}" />
+			</p:column>
+
+			<p:column headerText="Conta Ativo" width="15%" sortBy="#{item.contaAtivo.cdConta}">
+				<h:outputText value="#{item.contaAtivo.cdConta}" title="#{item.contaAtivo.dsConta}"/>
+			</p:column>				
+							
+			<p:column headerText="Conta Depreciação" width="16%" sortBy="#{item.contaDepreciacao.cdConta}">
+				<h:outputText value="#{item.contaDepreciacao.cdConta}" title="#{item.contaDepreciacao.dsConta}"/>
+			</p:column>				
+							
+			<p:column headerText="Depreciação" width="10%">
+				<h:outputText value="#{item.pcTaxaDepreciacao}">
+					<f:convertNumber pattern="#,##0.00"/>
+				</h:outputText>
+			</p:column>
+
+			<p:column headerText="Residual" width="10%">
+				<h:outputText value="#{item.pcResidual}">
+					<f:convertNumber pattern="#,##0.00"/>
+				</h:outputText>
+			</p:column>
+			
+		</p:dataTable>
+
+
+		<p:dialog id="cadDialog" header="Cadastro de Categorias de Imobilizado"
+			widgetVar="cadDialogWidgetVar" modal="true" resizable="false"
+			closeOnEscape="true"
+			onShow="configurarMoeda()">
+			
+			<p:messages id="cadMessages" />
+
+			<p:defaultCommand target="salvarCommandButton" scope="cadDialog" />
+
+			<p:panelGrid id="cadPanelGrid" columns="2"
+				rendered="#{catImobiliBean.categImobilizado ne null}">
+
+				<p:outputLabel value="ID Interno:" />
+				<h:outputText value="#{catImobiliBean.categImobilizado.cdCategImobili}"
+					styleClass="textoNegrito">
+					<f:convertNumber pattern="000" />
+				</h:outputText>
+
+				<p:outputLabel value="Descrição" for="dsCategImobili" />
+				<p:inputText id="dsCategImobili" value="#{catImobiliBean.categImobilizado.dsCategImobili}"
+					size="30" maxlength="30"/>
+
+				<p:outputLabel value="Taxa Depreciação" for="pcTaxaDepreciacao" />
+				<p:inputText id="pcTaxaDepreciacao" value="#{catImobiliBean.categImobilizado.pcTaxaDepreciacao}"
+					size="10" maxlength="10" styleClass="moeda">
+					
+					<f:convertNumber type="number" minFractionDigits="2" maxFractionDigits="2"/>
+				</p:inputText>
+
+				<p:outputLabel value="Residual" for="pcResidual" />
+				<p:inputText id="pcResidual" value="#{catImobiliBean.categImobilizado.pcResidual}"
+					size="10" maxlength="10" styleClass="moeda">
+
+					<f:convertNumber type="number" minFractionDigits="2" maxFractionDigits="2"/>
+				</p:inputText>
+					
+				<p:outputLabel value="Conta Contábil Ativo:" />
+				<p:selectOneMenu value="#{catImobiliBean.categImobilizado.contaAtivo}"
+					filter="true" filterMatchMode="contains">
+					<f:selectItem itemLabel="Selecione..."/>
+					<f:selectItems value="#{catImobiliBean.listaContas}" var="ctb" 
+						itemValue="#{ctb}" itemLabel="#{ctb.cdConta} | #{ctb.dsConta}"/>
+				</p:selectOneMenu>
+				
+				<p:outputLabel value="Conta Contábil Depreciação:" />
+				<p:selectOneMenu value="#{catImobiliBean.categImobilizado.contaDepreciacao}"
+					filter="true" filterMatchMode="contains">
+					<f:selectItem itemLabel="Selecione..."/>
+					<f:selectItems value="#{catImobiliBean.listaContas}" var="ctb" 
+						itemValue="#{ctb}" itemLabel="#{ctb.cdConta} | #{ctb.dsConta}"/>
+				</p:selectOneMenu>
+				
+				<h:outputLabel />
+
+				<p:commandButton id="salvarCommandButton" value="Salvar"
+					actionListener="#{catImobiliBean.salvar}"
+					update="cadPanelGrid cadMessages"
+					oncomplete="if (!args.validationFailed) PF('cadDialogWidgetVar').hide()"
+					process="cadDialog" />
+
+			</p:panelGrid>
+		</p:dialog>
+	</h:form>		
+</ui:define>
+
+<ui:define name="rodape">1.0.0</ui:define>
+
+</ui:composition>

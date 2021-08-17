@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://xmlns.jcp.org/jsf/html"
+	xmlns:f="http://xmlns.jcp.org/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://xmlns.jcp.org/jsf/facelets">  <!-- INFORMA QUE ESTA PÁGINA É UM TEMPLATE: HABILITA O ui:insert -->
+
+<h:head>
+
+	<f:facet name="first">
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+	</f:facet>
+
+	<title>Contabilinove - ValorPlan</title>
+	
+	<h:outputStylesheet library="ctbli9" name="styles/custom.css" />
+	<h:outputStylesheet library="ctbli9" name="styles/layout.css" />
+	<h:outputStylesheet library="ctbli9" name="styles/components.css" />
+	
+	<h:outputScript target="body" library="primefaces" name="jquery/jquery.js" />
+	<h:outputScript target="body" library="ctbli9" name="javascripts/app.js" />
+	<h:outputScript target="body" library="ctbli9" name="javascripts/jquery.maskMoney.js"/>
+	
+	<ui:insert name="cmdScript"/>
+	
+	<style>
+		.ajax-status {
+			width: 35px;
+			height: 35px;
+			position: fixed;
+			right: 10px;
+			top: 5px;
+			z-index: 999999
+		}
+	</style>
+	
+	<script>
+		PrimeFaces.locales['pt'] = {
+		    closeText: 'Fechar',
+		    prevText: 'Anterior',
+		    nextText: 'Próximo',
+		    currentText: 'Começo',
+		    monthNames: ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'],
+		    monthNamesShort: ['Jan','Fev','Mar','Abr','Mai','Jun', 'Jul','Ago','Set','Out','Nov','Dez'],
+		    dayNames: ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'],
+		    dayNamesShort: ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'],
+		    dayNamesMin: ['D','S','T','Q','Q','S','S'],
+		    weekHeader: 'Semana',
+		    firstDay: 0,
+		    isRTL: false,
+		    showMonthAfterYear: false,
+		    yearSuffix: '',
+		    timeOnlyTitle: 'Só Horas',
+		    timeText: 'Tempo',
+		    hourText: 'Hora',
+		    minuteText: 'Minuto',
+		    secondText: 'Segundo',
+		    ampm: false,
+		    month: 'Mês',
+		    week: 'Semana',
+		    day: 'Dia',
+		    allDayText : 'Todo o Dia'
+		};
+	</script>
+</h:head>
+
+<h:body>
+
+	<p:ajaxStatus styleClass="ajax-status" oncomplete="configurarMoeda()">
+		<f:facet name="start">
+			<h:graphicImage library="ctbli9" name="images/loading.gif"/>
+		</f:facet>
+		<f:facet name="complete">
+			<h:outputText value=""/>
+		</f:facet>
+	</p:ajaxStatus>
+
+
+	<header class="ci9-topbar">
+		<div class="ci9-barra-menu">
+			<div class="ci9-topbar-logo">
+				<h:outputLink value="#{loginBean.inicio}">
+					<h:graphicImage library="ctbli9" name="images/logo.png" />
+				</h:outputLink>
+			</div>
+			
+			<a href="#" class="ci9-toggle  js-toggle"><i class="fa  fa-bars"></i></a>
+
+			<div class="ci9-topbar-plano">
+				<h:form>
+					<ui:include src="/WEB-INF/templates/_selecionaPlano.xhtml" />
+				</h:form>
+			</div>
+		
+			<div class="ci9-topbar-menu-h">
+				<h:form>
+					<ui:include src="/WEB-INF/templates/_menuH.xhtml" />
+				</h:form>
+			</div>
+			
+		</div>
+			
+		<div class="ci9-barra-usuario">
+			<div style="float: left">
+				<h:outputText value="Empresa:" style="font-weight: bold; color: #ff8000"/>
+				<h:outputText value="#{loginBean.usuarioLogado.contrato.dsEmpresa}" 
+					style="padding-left: 7px; padding-right: 20px"/>
+	
+				<h:outputText value="Usuário:" style="font-weight: bold; color: #ff8000"/>
+				<h:outputText value="#{loginBean.usuarioLogado.nomUsuario}" style="padding-left: 7px;"/>
+			</div>
+			
+			<div class="ci9-barra-programa">
+				<ui:insert name="titulo" />
+			</div>				
+					
+		</div>
+	</header>
+	
+	<aside class="ci9-sidebar  js-sidebar">
+		<h:form>
+			<ui:include src="/WEB-INF/templates/_menuV.xhtml" />
+		</h:form>	
+	</aside>
+	
+	<section class="ci9-content">
+		<ui:insert name="conteudo" />
+	</section>	
+	
+	<footer class="ci9-rodape">
+		ValorPlan - <ui:insert name="titulo"/> <h:outputText value="-" style="padding-left: 5px; padding-right: 5px"/> 
+		<ui:insert name="rodape"/>
+		 
+		<h:outputLink value="https://www.contabilinove.com.br/" target="_blank">
+			<h:outputText value="Desenvolvido por ContabilInove" style="color: white; padding-left: 5px; padding-right: 5px"/>
+		</h:outputLink>		
+	</footer>
+	
+	
+	<h:form>
+		<p:confirmDialog global="true">
+			<p:commandButton value="Não" icon="fa fa-remove"
+				styleClass="ui-confirmdialog-no" />
+
+			<p:commandButton value="Sim" icon="fa fa-check"
+				styleClass="ui-confirmdialog-yes" />
+		</p:confirmDialog>
+	</h:form>	
+	
+	
+	<script>
+		function configurarMoeda() {
+			$(".moeda").maskMoney({ decimal: ",", thousands: ".", allowZero: true });
+			$(".moeda04").maskMoney({ decimal: ",", thousands: ".", allowZero: true, precision: 4 });
+		}
+		
+		$(document).ready(function() {
+			configurarMoeda();
+		});
+	</script>
+
+</h:body>
+
+</html>

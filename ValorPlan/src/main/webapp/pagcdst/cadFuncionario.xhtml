@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+ 	xmlns:h="http://xmlns.jcp.org/jsf/html"
+ 	xmlns:f="http://xmlns.jcp.org/jsf/core"
+ 	xmlns:p="http://primefaces.org/ui"
+ 	xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+ 	template="/WEB-INF/templates/Layout.xhtml">
+
+<ui:define name="titulo">Cadastro de Funcionarios</ui:define>
+
+<ui:define name="conteudo">
+
+
+
+	<f:metadata>
+		<f:viewAction action="#{loginBean.validarPermissao('9;')}" />
+	</f:metadata>
+
+	<h:form id="frm">
+		<p:messages id="msgerro" />
+		<p:growl id="messages" />
+		
+		<p:accordionPanel id="filtroAccordion">
+			<p:tab title="Filtro Funcionario">
+				<p:panel>
+					<h:panelGrid id="filtroPanelgrid" style="width:100%" columns="4" 
+						columnClasses="colunaEsquerda,colunaDireita,colunaEsquerda,colunaDireita">
+						
+						<p:outputLabel value="Nome" for="filtroNmFuncionario"/>
+						<p:inputText id="filtroNmFuncionario" placeholder="Parte do nome..." size="20"
+							value="#{funcionarioBean.filtro.nmFuncionario}"/>
+						
+						<p:outputLabel value="Cargos" />
+				        <p:selectCheckboxMenu value="#{funcionarioBean.filtro.cargosSelecionados}" label="Selecione cargos para filtro"
+		                     filter="true" filterMatchMode="startsWith">
+				            <f:selectItems value="#{funcionarioBean.cargos}" var="cargo"
+								itemValue="#{cargo.cdCargo}" itemLabel="#{cargo.dsCargo}"/>	
+				        </p:selectCheckboxMenu>
+				        
+				        <p:outputLabel value="Centro de Custo" />
+				        <p:selectOneMenu id="cenCusto" value="#{funcionarioBean.filtro.centroCusto}" var="cec"
+							filter="true" filterMatchMode="contains">
+							
+							<f:selectItem itemLabel="Selecione..."/>
+							<f:selectItems value="#{funcionarioBean.listaCentroCusto}" var="set"
+								itemLabel="#{set.codExterno} | #{set.cecDsResumida}" itemValue="#{set}"/>
+								
+							<p:column headerText="Setor">
+								<h:outputText value="#{cec.codExterno}" />
+							</p:column>
+							
+							<p:column headerText="Descrição">
+								<h:outputText value="#{cec.cecDsResumida}" />
+							</p:column>
+							
+							<p:column headerText="Filial">
+								<h:outputText value="#{cec.filial.sgFilial}" />
+							</p:column>
+						</p:selectOneMenu>
+					    
+				        <p:outputLabel value="Áreas" />
+				        <p:selectCheckboxMenu value="#{funcionarioBean.filtro.areasSelecionadas}" label="Selecione áreas dos centros de custo"
+		                     filter="true" filterMatchMode="startsWith">
+				            <f:selectItems value="#{funcionarioBean.areas}" var="area"
+								itemValue="#{area}" itemLabel="#{area.descricao}"/>	
+				        </p:selectCheckboxMenu>
+						
+					</h:panelGrid>
+				</p:panel>
+			</p:tab>
+		</p:accordionPanel>
+		
+		<p:toolbar id="funcionarioToolbar">
+			<f:facet name="left">
+				<p:commandButton value="Pesquisar" icon="fa fa-search" 
+					actionListener="#{funcionarioBean.listarFiltro}" update="funcionarioDataTable messages"
+					process="@this frm:filtroAccordion"/>
+				
+				<span class="ui-separator">
+	                <span class="ui-icon ui-icon-grip-dotted-vertical" />
+	            </span>
+	            
+	            <p:commandButton value="Novo" icon="fa fa-plus"
+	            	actionListener="#{funcionarioBean.inicializarRegistro}" 
+	            	oncomplete="PF('funcionarioDialogWidgetVar').show()"
+	            	update="funcionarioDialog" process="@this">
+	            	<p:resetInput target="funcionarioDialog"/>
+	            </p:commandButton>
+	
+				<span class="ui-separator">
+	                <span class="ui-icon ui-icon-grip-dotted-vertical" />
+	            </span>
+	            
+	            <p:commandButton value="Editar" icon="fa fa-edit"
+	            	title="Altera o registro selecionado" 
+	            	disabled="#{not funcionarioBean.itemSelecionado}"
+	            	oncomplete="PF('funcionarioDialogWidgetVar').show()"
+	            	update="funcionarioDialog" process="@this">
+	            	<p:resetInput target="funcionarioDialog"/>
+	            </p:commandButton>
+	
+	            <p:commandButton value="Excluir" icon="fa fa-trash"
+	            	title="Exclui o registro selecionado" 
+	            	disabled="#{not funcionarioBean.itemSelecionado}"
+	            	actionListener="#{funcionarioBean.excluir}"
+	            	update="messages funcionarioDataTable funcionarioToolbar"
+					process="@this">
+	            	<p:confirm icon="ui-icon-alert" header="Confirmação de Exclusão" 
+	            		message="Deseja Excluir o funcionario?" />
+	            </p:commandButton>
+	            
+				<span class="ui-separator">
+	                <span class="ui-icon ui-icon-grip-dotted-vertical" />
+	            </span>
+	            
+	            <p:commandButton title="Gera Planilha Excel" icon="fa fa-file-excel-o"
+	            	ajax="false">
+	            	<p:dataExporter type="xls" target="funcionarioDataTable" fileName="PlanilhaFuncionario" />
+	            </p:commandButton>
+			</f:facet>
+		</p:toolbar>
+
+		<p:spacer height="10" />
+		
+		<p:dataTable id="funcionarioDataTable" value="#{funcionarioBean.funcionarios}" 
+			var="item" emptyMessage="Nenhuma informação a ser exibida"
+			selectionMode="single" selection="#{funcionarioBean.funcionario}" rowKey="#{item.cdFuncionario}"
+			scrollable="true" scrollHeight="380">
+				
+			<p:ajax event="rowSelect" update="frm:funcionarioToolbar" />
+			<p:ajax event="rowUnselect" update="frm:funcionarioToolbar" />
+				
+			<p:column headerText="Nome Funcionário" sortBy="#{item.nmFuncionario}">
+				<h:outputText value="#{item.nmFuncionario}" />
+			</p:column>	
+			
+			<p:column headerText="Login" width="10%" sortBy="#{item.logUsuario}">
+				<h:outputText value="#{item.logUsuario}" />
+			</p:column>	
+			
+			<p:column headerText="CPF" width="15%" sortBy="#{item.dcFuncionario}">
+				<h:outputText value="#{item.dcFuncionario}"/>
+			</p:column>	
+
+			<p:column headerText="Cargo" width="20%" sortBy="#{item.cargo.dsCargo}">
+				<h:outputText value="#{item.cargo.dsCargo}" />
+			</p:column>				
+
+			<p:column headerText="Centro de Custo" width="12%" sortBy="#{item.cenCusto.codExterno}">
+				<h:outputText value="#{item.cenCusto.codExterno}" />
+			</p:column>				
+
+			<p:column headerText="Descrição Centro de Custo" width="25%" sortBy="#{item.cenCusto.cecDsResumida}">
+				<h:outputText value="#{item.cenCusto.cecDsResumida}" />
+			</p:column>	
+										
+		</p:dataTable>
+		
+		<p:dialog id="funcionarioDialog" header="Cadastro de Funcionario" widgetVar="funcionarioDialogWidgetVar"
+			modal="true" resizable="false" closeOnEscape="true" onShow="configurarMoeda()"
+			responsive="true">
+			<p:messages id="funcionarioMessages"/>
+			
+			<p:defaultCommand target="salvarCommandButton" scope="funcionarioDialog" />
+		
+			<h:panelGrid id="funcionarioPanelGrid" columns="2" layout="grid"
+					columnClasses="ui-g-12 ui-lg-2,ui-g-12 ui-lg-10"
+					styleClass="ui-panelgrid-blank"
+				rendered="#{funcionarioBean.funcionario ne null}">
+				
+				<p:outputLabel value="ID Funcionario:" for="cdFuncionario"/>
+				<h:outputText id="cdFuncionario"
+					value="#{funcionarioBean.funcionario.cdFuncionario}" readonly="true">
+					<f:convertNumber pattern="00000" locale="pt_BR"/>
+				</h:outputText>
+				
+				<p:outputLabel value="CPF:"/>
+				<p:inputMask id="cpf" value="#{funcionarioBean.funcionario.dcFuncionario}" 
+					mask="999.999.999-99" size="14" type="integer"
+					converter="cpfConverter"/>
+					
+				<p:outputLabel value="Nome:" for="nmFuncionario"/>
+				<p:inputText id="nmFuncionario" size="60" maxlength="60"
+					value="#{funcionarioBean.funcionario.nmFuncionario}"/>
+				
+				<p:outputLabel value="Cargo:" for="cdCargo"/>
+				<p:selectOneMenu value="#{funcionarioBean.funcionario.cargo}" id="cdCargo" required="true"
+					filter="true" filterMatchMode="contains">
+					
+					<f:selectItem itemLabel="Selecione..."/>
+					<f:selectItems value="#{funcionarioBean.cargos}" var="cargo"
+						itemValue="#{cargo}" itemLabel="#{cargo.dsCargo}"/>
+				</p:selectOneMenu>
+				
+				<p:outputLabel value="Login Usuário:" for="usuLogin"/>
+				<p:inputText id="usuLogin" size="30" maxlength="30"
+					value="#{funcionarioBean.funcionario.logUsuario}"/>
+				
+				<p:outputLabel value="Centro de Custo:" for="cdCenCusto"/>
+				<p:selectOneMenu value="#{funcionarioBean.funcionario.cenCusto}" id="cdCenCusto" var="set"
+					filter="true" filterMatchMode="contains">
+					<f:selectItem itemLabel="Selecione..."/>
+					<f:selectItems value="#{funcionarioBean.listaCentroCusto}" var="item"
+						itemLabel="#{item.codExterno} - #{item.cecDsResumida}" itemValue="#{item}"/>
+						
+					<p:column headerText="Ref.Externa">
+						<h:outputText value="#{set.codExterno}" />
+					</p:column>
+					
+					<p:column headerText="Nome">
+						<h:outputText value="#{set.cecDsResumida}" />
+					</p:column>
+					
+					<p:column headerText="Filial">
+						<h:outputText value="#{set.filial.sgFilial}" />
+					</p:column>
+				</p:selectOneMenu>
+				
+				<p:outputLabel value="E-Mail:" for="txEmailFuncionario"/>
+				<p:inputText id="txEmailFuncionario" size="50" maxlength="90"
+					value="#{funcionarioBean.funcionario.txEmailFuncionario}"/>
+					
+				<h:outputLabel />
+					
+				<h:panelGroup>
+					<p:selectBooleanCheckbox id="funIdAtivo" value="#{funcionarioBean.funcionario.funIdAtivo}" />
+					<p:outputLabel value="Ativo" style="padding-left: 3px; padding-right: 5px"/>
+				</h:panelGroup>
+				
+				<h:outputLabel />
+				
+				<p:commandButton id="salvarCommandButton" value="Salvar" icon="fa fa-save"
+					actionListener="#{funcionarioBean.salvar}"
+					update="funcionarioPanelGrid funcionarioMessages"
+					oncomplete="if (!args.validationFailed) PF('funcionarioDialogWidgetVar').hide()" process="funcionarioDialog"/>
+					
+			</h:panelGrid>		
+		</p:dialog>
+			
+	</h:form>		
+</ui:define>
+
+<ui:define name="rodape">1.0.0</ui:define>
+
+
+</ui:composition>

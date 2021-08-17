@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+ 	xmlns:h="http://xmlns.jcp.org/jsf/html"
+ 	xmlns:f="http://xmlns.jcp.org/jsf/core"
+ 	xmlns:p="http://primefaces.org/ui"
+ 	xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+ 	template="/WEB-INF/templates/Layout.xhtml">
+
+<ui:define name="titulo">Cadastro de Receitas</ui:define>
+
+<ui:define name="conteudo">
+
+	<f:metadata>
+		<f:viewAction action="#{loginBean.validarPermissao('13;')}"/>
+		<f:viewAction action="#{cadastroReceitaBean.inicializar}" />
+	</f:metadata>
+
+	<h:form id="frm">
+		<p:growl id="messages" />
+		
+		<p:accordionPanel id="filtroAccordion">
+			<p:tab title="Filtro Receitas">
+				<p:panel>
+					<h:panelGrid id="filtroPanelgrid" style="width:100%" columns="4">
+			
+						<p:outputLabel value="Sigla:"/>
+						<p:inputText size="7" maxlength="7" styleClass="textoMaiusculo"
+							placeholder="Parte da sigla..."
+							value="#{cadastroReceitaBean.filtro.sgReceita}"/>
+						
+						<p:outputLabel value="Categoria:"/>
+						<p:selectCheckboxMenu id="cdCategoria" value="#{cadastroReceitaBean.filtro.cdCategorias}" 
+							label="Categorias de receita">
+				            <f:selectItems value="#{cadastroReceitaBean.listaCategoria}" var="tip"
+								itemValue="#{tip.cdCategoria}" itemLabel="#{tip.dsCategoria}"/>
+				        </p:selectCheckboxMenu>
+						
+						<p:outputLabel value="Descrição:"/>
+						<p:inputText size="40" maxlength="40"
+							placeholder="Parte da Descrição..."
+							value="#{cadastroReceitaBean.filtro.dsCompleta}"/>
+						
+						<p:outputLabel value="Conta Contábil:"/>
+						<p:selectOneMenu value="#{cadastroReceitaBean.filtro.contaContabil}"
+							filter="true" filterMatchMode="contains">
+							<f:selectItems value="#{cadastroReceitaBean.contasReceita}"/>
+						</p:selectOneMenu>
+						
+					</h:panelGrid>				
+				</p:panel>
+			</p:tab>
+		</p:accordionPanel>
+		
+		<p:toolbar id="receitaToolbar">
+			<p:toolbarGroup align="left">
+				<p:commandButton value="Pesquisar" icon="fa fa-search" 
+					title="Lista receitas de acordo com o filtro selecionado"
+					actionListener="#{cadastroReceitaBean.listarTudo}" 
+					process="@this frm:filtroAccordion"
+					update="receitaDataTable messages"/>
+				
+				<span class="ui-separator">
+	                <span class="ui-icon ui-icon-grip-dotted-vertical" />
+	            </span>
+	            
+	            <p:commandButton value="Incluir" icon="fa fa-plus"
+	            	title="Inclui nova conta de receita"
+	            	actionListener="#{cadastroReceitaBean.inicializarRegistro}" 
+	            	oncomplete="PF('receitaDialogWidgetVar').show()"
+	            	update="receitaDialog" process="@this">
+	            	<p:resetInput target="receitaDialog"/>
+	            </p:commandButton>
+	
+				<span class="ui-separator">
+	                <span class="ui-icon ui-icon-grip-dotted-vertical" />
+	            </span>
+	            
+	            <p:commandButton value="Editar" icon="fa fa-edit" 
+	            	title="Altera o registro selecionado"
+	            	disabled="#{not cadastroReceitaBean.itemSelecionado}"
+	            	actionListener="#{cadastroReceitaBean.alterarRegistro}" 
+	            	oncomplete="PF('receitaDialogWidgetVar').show()"
+	            	update="receitaDialog" process="@this">
+	            	<p:resetInput target="receitaDialog"/>
+	            </p:commandButton>
+	
+	            <p:commandButton value="Excluir" icon="fa fa-trash" 
+	            	title="Exclui o registro selecionado"
+	            	disabled="#{not cadastroReceitaBean.itemSelecionado}"
+	            	actionListener="#{cadastroReceitaBean.excluir}"
+	            	update="messages receitaDataTable receitaToolbar"
+					process="@this">
+	            	<p:confirm icon="ui-icon-alert" header="Confirmação de Exclusão" 
+	            		message="Deseja Excluir a receita?" />
+	            </p:commandButton>
+	            
+				<span class="ui-separator">
+	                <span class="ui-icon ui-icon-grip-dotted-vertical" />
+	            </span>
+	            
+	            <p:commandButton value="Excel" icon="fa fa-file-excel-o"
+	            	title="Gera Planilha Excel com o conteúdo do grid"
+	            	ajax="false">
+	            	<p:dataExporter type="xls" target="receitaDataTable" fileName="PlanilhaReceita" />
+	            </p:commandButton>
+
+				<p:commandButton value="Deduções" icon="fa fa-usd" 
+	            	title="Relacionamento das contas de deduções de venda"
+	            	disabled="#{not cadastroReceitaBean.itemSelecionado}"
+	            	actionListener="#{cadastroReceitaBean.listarDeducoes}" 
+	            	oncomplete="PF('deducoesDialogWidgetVar').show()"
+	            	update="deducoesDialog" process="@this">
+	            	<p:resetInput target="deducoesDialog"/>
+	            </p:commandButton>
+	            
+			</p:toolbarGroup>
+			
+			<p:toolbarGroup align="right">
+				<p:button value="Categorias" icon="fa fa-th-list"
+			    	title="Cadastro de categoria de produtos/serviços"
+			    	outcome="/pagcdst/cadCategoriaReceita?faces-redirect=true" 	ajax="false"/>
+			
+			</p:toolbarGroup>
+		</p:toolbar>
+		
+		<p:spacer height="10" />
+		
+		<p:dataTable id="receitaDataTable" style="width:100%;" value="#{cadastroReceitaBean.receitas}" 
+			var="item" emptyMessage="Nenhuma informação a ser exibida"
+			selectionMode="single" selection="#{cadastroReceitaBean.receita}" rowKey="#{item.cdReceita}"
+			scrollable="true" scrollHeight="380">
+				
+			<p:ajax event="rowSelect" update="frm:receitaToolbar" />			
+			<p:ajax event="rowUnselect" update="frm:receitaToolbar" />
+
+			<p:column headerText="Sigla" width="10%" sortBy="#{item.sgReceita}">
+				<h:outputText value="#{item.sgReceita}"/>
+			</p:column>
+				
+			<p:column headerText="Descrição" sortBy="#{item.dsReceita}">
+				<h:outputText value="#{item.dsReceita}" />
+			</p:column>				
+				
+			<p:column headerText="Categoria" sortBy="#{item.categoria.dsCategoria}">
+				<h:outputText value="#{item.categoria.dsCategoria}" />
+			</p:column>				
+								
+			<p:column headerText="Conta Receita" width="10%" sortBy="#{item.contaReceita.cdConta}">
+				<h:outputText value="#{item.contaReceita.cdConta}" />
+			</p:column>				
+				
+			<p:column headerText="Descrição" width="21%" >
+				<h:outputText value="#{item.contaReceita.dsConta.length() > 25 ? 
+									item.contaReceita.dsConta.substring(0,25) : 
+									item.contaReceita.dsConta}" />
+			</p:column>
+			
+			<p:column headerText="Ativa" width="7%" styleClass="central" sortBy="#{item.idAtivo}">
+				<h:graphicImage	value="../resources/ctbli9/images/ok.png"
+					rendered="#{item.idAtivo}"/>
+					
+				<h:graphicImage	value="../resources/ctbli9/images/cancela.png"
+					rendered="#{!item.idAtivo}"/>
+			</p:column>		
+			
+		</p:dataTable>
+		
+		<p:dialog id="receitaDialog" header="Cadastro de Receita" widgetVar="receitaDialogWidgetVar"
+			modal="true" resizable="false" closeOnEscape="true">
+			<p:messages id="receitaMessages"/>
+			
+			<p:defaultCommand target="salvarCommandButton" scope="receitaDialog" />
+		
+			<h:panelGrid id="processoPanelGrid">
+				<h:panelGroup>
+					<h2>
+						<h:outputText value="&#x027E9;" style="padding-left: 10px"
+							styleClass="#{cadastroReceitaBean.estaNaEtapa(1) ? 'fundoVermelho' : ''}"/>
+						<h:outputText value="Cadastrar Conta"/>
+						
+						<h:outputText value="&#x027E9;" style="padding-left: 10px; margin-left: 5px"
+							styleClass="#{cadastroReceitaBean.estaNaEtapa(2) ? 'fundoVermelho' : ''}"/>
+						<h:outputText value="Relacionar Deduções"/>
+	
+						<h:outputText value="&#x027E9;" style="padding-left: 10px; margin-left: 5px"
+							styleClass="#{cadastroReceitaBean.estaNaEtapa(3) ? 'fundoVermelho' : ''}"/>
+						<h:outputText value="Parametrizar Deduções"/>
+					</h2>
+				</h:panelGroup>
+				
+			</h:panelGrid>
+			<h:panelGrid id="receitaPanelGrid" columns="2" columnClasses="colunaEsquerda,colunaDireita"
+				rendered="#{cadastroReceitaBean.receita ne null}">
+				
+
+				<p:outputLabel value="Identificador:"/>
+				<h:outputText id="cdReceita" styleClass="textoNegrito"
+					value="#{cadastroReceitaBean.receita.cdReceita}">
+					<f:convertNumber pattern="0000"/>
+				</h:outputText>
+					
+				<p:outputLabel value="Sigla:" for="sigla"/>
+				<p:inputText id="sigla" size="10" maxlength="10" styleClass="textoMaiusculo"
+					value="#{cadastroReceitaBean.receita.sgReceita}"/>
+				
+				<p:outputLabel value="Descrição:" for="dsReceita"/>
+				<p:inputText id="dsReceita" size="40" maxlength="40"
+						value="#{cadastroReceitaBean.receita.dsReceita}"/>
+				
+				<p:outputLabel value="Categoria:" for="cdCategoria"/>
+				<p:selectOneMenu value="#{cadastroReceitaBean.receita.categoria.cdCategoria}" id="cdCategoria">
+					<f:selectItems value="#{cadastroReceitaBean.listaCategoria}" var="cat"
+						itemValue="#{cat.cdCategoria}" itemLabel="#{cat.dsCategoria}"/>
+				</p:selectOneMenu>
+				
+				<p:outputLabel value="Conta Contábil Receita:" for="contaReceita"/>
+				<p:selectOneMenu value="#{cadastroReceitaBean.receita.contaReceita}" id="contaReceita" required="true"
+					filter="true" filterMatchMode="contains">
+					<f:selectItems value="#{cadastroReceitaBean.contasReceita}"/>
+				</p:selectOneMenu>
+				
+				<p:outputLabel value="" />
+				<p:selectBooleanCheckbox value="#{cadastroReceitaBean.receita.idAtivo}" itemLabel="Conta Ativa" 
+					style="padding-right: 5px;"/>
+				
+				<h:outputLabel />
+				
+				<h:panelGroup>
+					<p:commandButton id="salvarCommandButton" value="Salvar" 
+						actionListener="#{cadastroReceitaBean.salvar}"
+						process="receitaDialog"
+						update="processoPanelGrid receitaPanelGrid receitaMessages"/>
+						
+					<p:commandButton value="Deduções"
+		            	rendered="#{cadastroReceitaBean.estaNaEtapa(2)}"
+		            	actionListener="#{cadastroReceitaBean.listarDeducoes}" 
+		            	oncomplete="PF('deducoesDialogWidgetVar').show()"
+		            	update="deducoesDialog" process="@this">
+		            	<p:resetInput target="deducoesDialog"/>
+		            </p:commandButton>
+						
+					<p:commandButton id="fecharCommandButton" value="Fechar"
+						rendered="#{!(cadastroReceitaBean.estaNaEtapa(1))}"
+						oncomplete="if (!args.validationFailed) PF('receitaDialogWidgetVar').hide()"/>
+				</h:panelGroup>
+					
+			</h:panelGrid>		
+		</p:dialog>
+		
+		
+		<p:dialog id="deducoesDialog" header="Deduções da Receita" widgetVar="deducoesDialogWidgetVar"
+			modal="true" resizable="false" closeOnEscape="true">
+			<p:messages id="deducoesMessages"/>
+		
+		
+			<h:panelGrid id="deducoesPanelGrid" columns="1">
+				<p:toolbar id="despesaToolbar">
+					<f:facet name="left">
+						<h:outputText value="#{cadastroReceitaBean.receita.sgReceita} - 
+							#{cadastroReceitaBean.receita.dsReceita}"
+							styleClass="textoNegrito"
+							style="padding-right: 10px"/>
+					</f:facet>
+				</p:toolbar>
+			
+				<p:dataTable id="deducoesDataTable" value="#{cadastroReceitaBean.receita.deducaoSobreVenda}" 
+					var="item" emptyMessage="Nenhuma informação a ser exibida"
+					scrollable="true" scrollHeight="400"
+					rowHover="true"
+					reflow="true">
+					
+					<p:column headerText="Ações" width="10%" styleClass="central">
+						<p:commandLink 
+							action="#{cadastroReceitaBean.excluirDespesaSobreVenda}"
+							process="@this"
+							update="deducoesDataTable frm:deducoesMessages">
+							
+							<f:setPropertyActionListener value="#{item}" target="#{cadastroReceitaBean.despesa}"/>
+							
+							<h:graphicImage value="../resources/ctbli9/images/delete.png"
+								title="Excluir despesa"/>
+								
+							<p:confirm icon="ui-icon-alert" header="Confirmação de Exclusão" 
+			            		message="Deseja remover esta despesa da receita?" />
+						</p:commandLink>
+						
+					</p:column>	
+					
+					<p:column headerText="Conta Contábil">
+						<h:outputText value="#{item.conta.cdConta}-#{item.conta.dsConta}" 
+							rendered="#{item.conta.idConta ne 0}"/>
+							
+						<p:selectOneMenu id="contaDespesa" value="#{cadastroReceitaBean.despesa.conta}" var="item" 
+							filter="true" filterMatchMode="contains"
+							rendered="#{item.conta.idConta eq 0}">
+							
+							<f:selectItem itemLabel="Selecione uma conta..."/>
+							<f:selectItems value="#{cadastroReceitaBean.despesasAnaliticas}" var="conta"
+								itemValue="#{conta}" 
+								itemLabel="#{conta.cdConta} | #{conta.sgConta} | #{conta.dsConta}"/>
+							
+							<p:column headerText="Conta">
+								<h:outputText value="#{item.cdConta}" />
+							</p:column>
+							
+							<p:column headerText="Sigla">
+								<h:outputText value="#{item.sgConta}" />
+							</p:column>
+							
+							<p:column headerText="Descrição">
+								<h:outputText value="#{item.dsConta}" />
+							</p:column>
+							
+							<p:ajax event="change" listener="#{cadastroReceitaBean.incluirDespesaSobreVenda}" update="deducoesDataTable"/>
+						</p:selectOneMenu>
+					</p:column>
+								
+				</p:dataTable>
+			</h:panelGrid>
+		</p:dialog>
+	</h:form>		
+</ui:define>
+
+<ui:define name="rodape">1.0.0</ui:define>
+
+</ui:composition>

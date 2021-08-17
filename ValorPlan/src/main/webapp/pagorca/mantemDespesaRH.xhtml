@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+ 	xmlns:h="http://xmlns.jcp.org/jsf/html"
+ 	xmlns:f="http://xmlns.jcp.org/jsf/core"
+ 	xmlns:p="http://primefaces.org/ui"
+ 	xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+ 	template="/WEB-INF/templates/Layout.xhtml">
+
+<ui:define name="titulo">Parâmetros Despesa de RH</ui:define>
+
+<style type="text/css">
+	.coluna50 {
+		width: 200px;
+	}
+</style>
+
+<ui:define name="conteudo">
+
+	<f:metadata>
+		<f:viewAction action="#{loginBean.validarPermissao('113;')}"/>
+		<f:viewAction action="#{despesaRHBean.inicializar}"/>
+	</f:metadata>
+
+
+	<h:form id="frm">
+		<p:growl id="messages" />
+		
+		<p:panelGrid columns="1" style="width: 100%">
+			<h:panelGrid id="filtroPG" columns="2" width="100%" columnClasses="esquerda,direita">
+				<h:outputText value="Contas de Salário:" styleClass="textoNegrito"/>
+				<h:outputText />
+			
+				<h:panelGroup>
+					<p:selectOneMenu value="#{despesaRHBean.contaSalario}"
+						filter="true" filterMatchMode="contains">
+						
+						<f:selectItem itemLabel="Selecione..."/>
+						<f:selectItems value="#{despesaRHBean.contasSalario}" var="item"
+							itemLabel="#{item.cdConta} | #{item.dsConta}" itemValue="#{item}"/>
+							
+						<p:ajax event="change" 
+							process="@this"
+							update="paramDespesaDataTable filtroPG salvarCB excelCB" 
+							listener="#{despesaRHBean.listarDespesas}"
+							oncomplete="configurarMoeda()"/>
+					</p:selectOneMenu>
+
+				
+					<p:commandButton id="salvarCB" value="Salvar" icon="fa fa-save" styleClass="margem-botao"
+		            	disabled="#{despesaRHBean.inativo}"
+		            	actionListener="#{despesaRHBean.salvar}" 
+		            	update="messages frm:filtroPG frm:paramDespesaDataTable" process="@this paramDespesaDataTable"
+		            	oncomplete="configurarMoeda()"/>
+		            
+		            <p:commandButton id="excelCB" value="Excel" title="Gera Planilha Excel" icon="fa fa-file-excel-o"
+		            	ajax="false">
+		            	<p:dataExporter type="xls" target="paramDespesaDataTable" fileName="PlanilhaParamRH" />
+		            </p:commandButton>
+		            
+				</h:panelGroup>	
+				
+				<h:outputText value="#{despesaRHBean.quantParametros} Contas de encargo parametrizadas"
+					styleClass="textoNegrito"/>
+			</h:panelGrid>
+		</p:panelGrid>
+		
+		<p:spacer height="10" />
+		
+		<p:dataTable id="paramDespesaDataTable" value="#{despesaRHBean.listaParDespesas}"
+			style="width: 100%" 
+			var="item" emptyMessage="Nenhuma informação a ser exibida"
+			scrollable="true" scrollHeight="330"
+			rowStyleClass="#{item.temValor ? 'fundoLaranja' : ''}"
+			rowHover="true">
+			
+			<p:column headerText="Despesa" width="7%" sortBy="#{item.encargo.sgConta}">
+				<h:outputText value="#{item.encargo.sgConta}"
+					title="#{item.encargo.dsConta}"/>
+			</p:column>
+			
+			<p:column headerText="Conta" width="8%" sortBy="#{item.encargo.cdConta}">
+				<h:outputText value="#{item.encargo.cdConta}"/>
+			</p:column>
+			
+			<p:column headerText="% JAN" styleClass="direita" width="7%">
+		   		<p:inputText value="#{item.percDespesa[0]}" maxlength="5"
+		   			style="height:100%; width:100%; box-shadow: none; padding: 1px; margin-top: 0px; margin-bottom: 0px;" styleClass="moeda"
+		   			disabled="#{despesaRHBean.mesFechado(1)}">
+					<f:convertNumber type="number" minFractionDigits="2"/>
+				</p:inputText>
+			</p:column>
+			<p:column headerText="% FEV" styleClass="direita" width="7%">
+		   		<p:inputText value="#{item.percDespesa[1]}" maxlength="5" 
+		   			style="height:100%; width:100%; box-shadow: none; padding: 1px; margin-top: 0px; margin-bottom: 0px;" styleClass="moeda"
+		   			disabled="#{despesaRHBean.mesFechado(2)}">
+					<f:convertNumber type="number" minFractionDigits="2"/>
+				</p:inputText>
+			</p:column>
+			<p:column headerText="% MAR" styleClass="direita" width="7%">
+		   		<p:inputText value="#{item.percDespesa[2]}" maxlength="5" 
+		   			style="height:100%; width:100%; box-shadow: none; padding: 1px; margin-top: 0px; margin-bottom: 0px;" styleClass="moeda"
+		   			disabled="#{despesaRHBean.mesFechado(3)}">
+					<f:convertNumber type="number" minFractionDigits="2"/>
+				</p:inputText>
+			</p:column>
+			<p:column headerText="% ABR" styleClass="direita" width="7%">
+		   		<p:inputText value="#{item.percDespesa[3]}" maxlength="5" 
+		   			style="height:100%; width:100%; box-shadow: none; padding: 1px; margin-top: 0px; margin-bottom: 0px;" styleClass="moeda"
+		   			disabled="#{despesaRHBean.mesFechado(4)}">
+					<f:convertNumber type="number" minFractionDigits="2"/>
+				</p:inputText>
+			</p:column>
+			<p:column headerText="% MAI" styleClass="direita" width="7%">
+		   		<p:inputText value="#{item.percDespesa[4]}" maxlength="5" 
+		   			style="height:100%; width:100%; box-shadow: none; padding: 1px; margin-top: 0px; margin-bottom: 0px;" styleClass="moeda"
+		   			disabled="#{despesaRHBean.mesFechado(5)}">
+					<f:convertNumber type="number" minFractionDigits="2"/>
+				</p:inputText>
+			</p:column>
+			<p:column headerText="% JUN" styleClass="direita" width="7%">
+		   		<p:inputText value="#{item.percDespesa[5]}" maxlength="5" 
+		   			style="height:100%; width:100%; box-shadow: none; padding: 1px; margin-top: 0px; margin-bottom: 0px;" styleClass="moeda"
+		   			disabled="#{despesaRHBean.mesFechado(6)}">
+					<f:convertNumber type="number" minFractionDigits="2"/>
+				</p:inputText>
+			</p:column>
+			<p:column headerText="% JUL" styleClass="direita" width="7%">
+		   		<p:inputText value="#{item.percDespesa[6]}" maxlength="5" 
+		   			style="height:100%; width:100%; box-shadow: none; padding: 1px; margin-top: 0px; margin-bottom: 0px;" styleClass="moeda"
+		   			disabled="#{despesaRHBean.mesFechado(7)}">
+					<f:convertNumber type="number" minFractionDigits="2"/>
+				</p:inputText>
+			</p:column>
+			<p:column headerText="% AGO" styleClass="direita" width="7%">
+		   		<p:inputText value="#{item.percDespesa[7]}" maxlength="5" 
+		   			style="height:100%; width:100%; box-shadow: none; padding: 1px; margin-top: 0px; margin-bottom: 0px;" styleClass="moeda"
+		   			disabled="#{despesaRHBean.mesFechado(8)}">
+					<f:convertNumber type="number" minFractionDigits="2"/>
+				</p:inputText>
+			</p:column>
+			<p:column headerText="% SET" styleClass="direita" width="7%">
+		   		<p:inputText value="#{item.percDespesa[8]}" maxlength="5" 
+		   			style="height:100%; width:100%; box-shadow: none; padding: 1px; margin-top: 0px; margin-bottom: 0px;" styleClass="moeda"
+		   			disabled="#{despesaRHBean.mesFechado(9)}">
+					<f:convertNumber type="number" minFractionDigits="2"/>
+				</p:inputText>
+			</p:column>
+			<p:column headerText="% OUT" styleClass="direita" width="7%">
+		   		<p:inputText value="#{item.percDespesa[9]}" maxlength="5" 
+		   			style="height:100%; width:100%; box-shadow: none; padding: 1px; margin-top: 0px; margin-bottom: 0px;" styleClass="moeda"
+		   			disabled="#{despesaRHBean.mesFechado(10)}">
+					<f:convertNumber type="number" minFractionDigits="2"/>
+				</p:inputText>
+			</p:column>
+			<p:column headerText="% NOV" styleClass="direita" width="7%">
+		   		<p:inputText value="#{item.percDespesa[10]}" maxlength="5" 
+		   			style="height:100%; width:100%; box-shadow: none; padding: 1px; margin-top: 0px; margin-bottom: 0px;" styleClass="moeda"
+		   			disabled="#{despesaRHBean.mesFechado(11)}">
+					<f:convertNumber type="number" minFractionDigits="2"/>
+				</p:inputText>
+			</p:column>
+			<p:column headerText="% DEZ" styleClass="direita" width="7%">
+		   		<p:inputText value="#{item.percDespesa[11]}" maxlength="5" 
+		   			style="height:100%; width:100%; box-shadow: none; padding: 1px; margin-top: 0px; margin-bottom: 0px;" styleClass="moeda"
+		   			disabled="#{despesaRHBean.mesFechado(12)}">
+					<f:convertNumber type="number" minFractionDigits="2"/>
+				</p:inputText>
+			</p:column>
+			
+			
+		</p:dataTable>
+					
+	</h:form>		
+</ui:define>
+
+<ui:define name="rodape">1.0.0</ui:define>
+
+</ui:composition>

@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://xmlns.jcp.org/jsf/html"
+	xmlns:f="http://xmlns.jcp.org/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+	template="/WEB-INF/templates/Layout.xhtml">
+
+	<ui:define name="titulo">Endereços da Filial</ui:define>
+
+	<ui:define name="conteudo">
+
+		<f:metadata>
+			<f:viewAction action="#{loginBean.validarPermissao(';0;')}" />
+			<f:viewAction action="#{filialEnderecoBean.recebeParametroFilial}" />
+		</f:metadata>
+
+		<h:form id="frm">
+			<p:messages id="messages" />
+  			
+  			<p:scrollPanel id="enderecoScrollPanel" style="width:970px;height:160px">
+				<p:dataTable id="enderecoDataTable" value="#{filialEnderecoBean.filial.enderecos}" var="item" 
+					selectionMode="single" selection="#{filialEnderecoBean.endereco}" rowKey="#{item.sqEndFilial}"
+					style="width: 100%">
+					
+					<p:ajax event="rowSelect" listener="#{filialEnderecoBean.reinicializa}" update="frm:enderecoPanelGrid" />
+					<p:ajax event="rowUnselect" listener="#{filialEnderecoBean.reinicializa}" update="frm:enderecoPanelGrid" />
+							
+					<p:column headerText="Endereço">
+						<h:outputText value="#{item.nmLogradouro}"/>
+					</p:column>
+					
+				</p:dataTable>
+			</p:scrollPanel>
+			
+			<p:toolbar id="filialToolbar">
+				<f:facet name="left">
+					<p:commandButton id="salvarEndCommandButton" value="Salvar" actionListener="#{filialEnderecoBean.salvarEndereco}"
+						process="@this frm:enderecoPanelGrid"
+						update="frm:enderecoPanelGrid frm:enderecoDataTable frm:messages"/>
+						
+					<p:button value="Voltar" icon="fa fa-undo"
+				    	outcome="/pagcdst/cadFilial?faces-redirect=true" ajax="false"/>
+				    
+				</f:facet>
+			</p:toolbar>	
+		  	
+			<h:panelGrid id="enderecoPanelGrid" columns="4" 
+				columnClasses="colEsquerdaFixo,colunaDireita,colEsquerdaFixo,colunaDireita">
+			
+				
+				<p:outputLabel value="Destino:" for="tipoEndereco"/>
+				<p:selectOneMenu id="tipoEndereco" value="#{filialEnderecoBean.endereco.tipo}">
+					<f:selectItems value="#{filialEnderecoBean.tiposEndereco}" var="tip" 
+						itemValue="#{tip}" itemLabel="#{tip.descricao}"/>
+				</p:selectOneMenu>
+				
+				<h:outputText/>
+				<h:outputText/>
+						
+				<p:outputLabel value="Identificação" for="tpLogradouro"/>
+				<p:inputText id="tpLogradouro" value="#{filialEnderecoBean.endereco.tpLogradouro}" 
+					size="5" maxlength="5"/>
+						
+				<p:outputLabel value="Logradouro:" for="nmLogradouro"/>
+				<p:inputText id="nmLogradouro" value="#{filialEnderecoBean.endereco.nmLogradouro}" 
+					size="60" maxlength="60"/>
+						
+				<p:outputLabel value="Numero:" for="nrLogradouro"/>
+				<p:inputText id="nrLogradouro" value="#{filialEnderecoBean.endereco.nrLogradouro}" 
+					size="5" maxlength="5"/>
+						
+				<p:outputLabel value="CEP" for="nrCEP"/>
+				<p:inputMask id="nrCEP" value="#{filialEnderecoBean.endereco.nrCEP}" 
+					mask="99999999" size="8" />
+						
+				<p:outputLabel value="UF:" for="uf"/>
+				<p:selectOneMenu id="uf" value="#{filialEnderecoBean.uf}"
+					filter="true" filterMatchMode="startsWith">
+				
+					<f:selectItem itemLabel="Selecione..."/>
+					<f:selectItems value="#{filialEnderecoBean.estadosBrasileiros}" var="uf" 
+						itemValue="#{uf}" itemLabel="#{uf.descricao}"/>
+						
+						<p:ajax event="change" update="cidadeUF" listener="#{filialEnderecoBean.listarCidadesUF}"/>
+				</p:selectOneMenu>
+						
+				<p:outputLabel value="Cidade:" for="cidadeUF"/>
+				<p:selectOneMenu id="cidadeUF" value="#{filialEnderecoBean.cidade.cdCidade}">
+					<f:selectItem itemLabel="Selecione..."/>
+					<f:selectItems value="#{filialEnderecoBean.cidadesUF}" var="cid" 
+						itemValue="#{cid.cdCidade}" itemLabel="#{cid.nmCidade}"/>
+						
+					<p:ajax event="change" update="bairroCidade" listener="#{filialEnderecoBean.listarBairrosCidade}"/>	
+				</p:selectOneMenu>
+						
+				<p:outputLabel value="Bairro:" for="bairroCidade"/>
+				<p:selectOneMenu id="bairroCidade" value="#{filialEnderecoBean.endereco.bairro.cdBairro}">
+					<f:selectItem itemLabel="Selecione..."/>
+					<f:selectItems value="#{filialEnderecoBean.bairrosCidade}" var="bai" 
+						itemValue="#{bai.cdBairro}" itemLabel="#{bai.nmBairro}"/>
+				</p:selectOneMenu>
+				
+				<h:outputText/>
+
+				<h:panelGroup>
+					<p:selectBooleanCheckbox id="ckAtivo" value="#{filialEnderecoBean.endereco.idAtivo}" />
+					<p:outputLabel value="Ativo" style="padding-left: 3px; padding-right: 5px"/>
+
+					<p:selectBooleanCheckbox id="ckPrincipal" value="#{filialEnderecoBean.endereco.idPrincipal}" />
+					<p:outputLabel value="Principal" style="padding-left: 3px; padding-right: 5px"/>
+				</h:panelGroup>
+
+				<h:outputText/>
+				<h:outputText/>
+				<h:outputText/>
+				<h:outputText/>
+
+				<p:outputLabel value="Vendedor" for="nmVendedor"/>
+				<p:inputText id="nmVendedor" value="#{filialEnderecoBean.endereco.nmContato}" 
+					size="60" maxlength="60"/>
+
+				<p:outputLabel value="Telefone" for="txTelefone"/>
+				<h:panelGroup>
+					<p:inputMask id="txTelefone" value="#{filialEnderecoBean.endereco.tlFixo}"
+						mask="(99) 9999-9999" size="14"/>
+					<p:outputLabel value="Ramal" for="nrRamal" style="padding-left: 20px; padding-right: 5px"/>
+					<p:inputMask id="nrRamal" value="#{filialEnderecoBean.endereco.nrRamal}" mask="9999" size="4">
+						<f:convertNumber pattern="0000"/>
+					</p:inputMask>
+				</h:panelGroup>
+
+				<p:outputLabel value="Celular" for="txCelular"/>
+				<p:inputMask id="txCelular" value="#{filialEnderecoBean.endereco.tlCelular}"
+					mask="(99) 99999-9999" size="15"/>
+
+				<p:outputLabel value="Fax" for="txFax"/>
+				<p:inputMask id="txFax" value="#{filialEnderecoBean.endereco.tlFax}"
+						mask="(99) 9999-9999" size="14"/>
+
+			
+				<p:outputLabel value="E-Mail Contato:" for="txEmailContato"/>
+				<p:inputText id="txEmailContato" value="#{filialEnderecoBean.endereco.txEmailContato}"
+					size="90" maxlength="90"/>
+				
+				<h:outputText/>
+				
+				
+				
+			</h:panelGrid>
+
+		</h:form>
+	</ui:define>
+
+	<ui:define name="rodape">1.0.0</ui:define>
+
+</ui:composition>

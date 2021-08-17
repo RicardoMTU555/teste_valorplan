@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+ 	xmlns:h="http://xmlns.jcp.org/jsf/html"
+ 	xmlns:f="http://xmlns.jcp.org/jsf/core"
+ 	xmlns:p="http://primefaces.org/ui"
+ 	xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+ 	template="/WEB-INF/templates/Layout.xhtml">
+
+<ui:define name="titulo">Lançamento de Receitas</ui:define>
+
+<ui:define name="conteudo">
+
+<style type="text/css">
+	.caixa {
+		height: 420px;
+		overflow-y: auto;
+	}
+</style>
+	
+	<f:metadata>
+		<f:viewAction action="#{loginBean.validarPermissao('130;')}"/>
+		<f:viewAction action="#{lancReceitaBean.listarFuncionario}"/>
+	</f:metadata>
+
+	<h:form id="frm">
+		<p:growl id="messages" />
+					
+		<p:toolbar id="receitaToolbar">
+			<p:toolbarGroup align="left">
+			
+				<p:outputLabel value="Ano Orçamento:"/>
+				<h:outputText value="#{lancReceitaBean.mesRef.ano}" styleClass="textoNegrito"/>
+			</p:toolbarGroup>
+
+			<p:toolbarGroup align="right">	            
+	            
+	            <p:commandButton id="gravarCommandButton" value="Gravar" title="Confirma alteração dos dados" icon="fa fa-save" 
+	            	disabled="#{lancReceitaBean.inativo}"
+	            	actionListener="#{lancReceitaBean.gravarOrcamento}"
+	            	process="@this frm:valrecDataTable" update="messages frm:receitasDataTable frm:valrecDataTable"
+	            	oncomplete="configurarMoeda();PF('vendedorDataTableWV').filter();PF('receitasDataTableWV').filter()"/>
+				
+				<p:commandButton value="Excel" icon="fa fa-file-excel-o" ajax="true" process="@this"
+					title="Gera planilha geral do arçamento de receitas"
+					actionListener="#{lancReceitaBean.baixarPlanilha}" 
+					onclick="PrimeFaces.monitorDownload(start, stop);">
+					
+				     <p:fileDownload value="#{lancReceitaBean.file}" />
+		
+				</p:commandButton>
+
+	            
+			</p:toolbarGroup>
+		</p:toolbar>
+		
+		<div class="ui-grid  ui-grid-responsive">
+			<div class="ui-grid-row">
+				<div class="ui-grid-col-2 caixa">
+				
+					<p:dataTable id="vendedorDataTable" widgetVar="vendedorDataTableWV"
+					    value="#{lancReceitaBean.funcionarios}" var="item"
+					    filteredValue="#{lancReceitaBean.funcionariosFiltrados}"
+						selectionMode="single" selection="#{lancReceitaBean.vendedorFiltro}" rowKey="#{item.cdRecurso}"
+						sortBy="#{item.setor.codExterno}" expandableRowGroups="true">
+						
+						<p:ajax event="rowSelect"
+							listener="#{lancReceitaBean.listarReceitaOrcamento}" 
+							process="@this"
+							update="frm:receitaToolbar frm:receitasDataTable frm:valrecDataTable" 
+							oncomplete="configurarMoeda();PF('receitasDataTableWV').filter()"/>
+							
+						<p:ajax event="rowUnselect"
+							listener="#{lancReceitaBean.listarReceitaOrcamento}" 
+							process="@this"
+							update="frm:receitaToolbar frm:receitasDataTable frm:valrecDataTable" 
+							oncomplete="configurarMoeda();PF('receitasDataTableWV').filter()"/>
+							
+							
+						 <p:headerRow field="setor.cecDsResumida"
+			                         expandable="true">
+			                
+			                <p:column colspan="1">
+			                    <div class="p-d-inline-flex p-ai-center" style="vertical-align: middle">
+			                        <h:outputText styleClass="p-ml-2" value="#{item.setor.cecDsResumida}"/>
+			                        <br/>
+									<h:outputText value="&#9734;"/>
+			                        <h:outputText value="#{item.setor.codExterno}" style="font-size: .7em"/>
+			                    </div>
+			                </p:column>
+			            </p:headerRow>
+			            
+						<p:column headerText="Colaborador" filterBy="#{item.nomeVinculo}" filterMatchMode="contains">
+							<h:outputText value="#{item.nomeVinculo}"/>
+						</p:column>
+							
+					</p:dataTable>
+				
+				</div>
+				
+				<div class="ui-grid-col-4 caixa">
+				
+					<p:dataTable id="receitasDataTable" widgetVar="receitasDataTableWV" 
+						value="#{lancReceitaBean.listaOrcRec}"
+						filteredValue="#{lancReceitaBean.listaOrcRecFiltrado}"
+						var="item" emptyMessage="Nenhuma informação a ser exibida"
+						sortBy="#{item.receita.categoria.dsCategoria}" expandableRowGroups="true"
+						style="font-size: .9em; margin-left: 7px"
+						selectionMode="single" selection="#{lancReceitaBean.receita}" rowKey="#{item.receita.cdReceita}">
+						
+						<p:ajax event="rowSelect"
+							listener="#{lancReceitaBean.listarValoresReceita}" 
+							process="@this"
+							update="frm:receitaToolbar frm:valrecDataTable" 
+							oncomplete="configurarMoeda();PF('receitasDataTableWV').filter()"/>
+							
+						<p:ajax event="rowUnselect"
+							listener="#{lancReceitaBean.listarValoresReceita}" 
+							process="@this"
+							update="frm:receitaToolbar frm:valrecDataTable" 
+							oncomplete="configurarMoeda();PF('receitasDataTableWV').filter()"/>
+							
+							
+						<p:headerRow field="receita.categoria.dsCategoria"
+			                         expandable="true">
+			                
+			                <p:column colspan="3">
+			                    <div class="p-d-inline-flex p-ai-center" style="vertical-align: middle">
+			                        <h:outputText styleClass="p-ml-2" value="#{item.receita.categoria.dsCategoria}"/>
+			                    </div>
+			                </p:column>
+			            </p:headerRow>
+			            
+						<p:column headerText="Receita" width="20%" sortBy="#{item.receita.sgReceita}"
+							filterBy="#{item.receita.sgReceita}" filterMatchMode="contains">
+							<p:commandLink
+								title="Mostra receita do ano anterior"
+								action="#{lancReceitaBean.mostrarReceitaAnterior}"
+								process="@this"
+								update="frm:receitaAnteriorDialog"
+								oncomplete="PF('receitaAnteriorDialogWidgetVar').show()">
+														
+								<f:setPropertyActionListener value="#{item}" target="#{lancReceitaBean.receita}"/>
+								
+								<h:outputText value="#{item.receita.sgReceita}" styleClass="textoNegrito"/>	
+							</p:commandLink>
+							<br/>
+							<h:outputText value="#{item.receita.contaReceita.cdConta}"/>
+						</p:column>
+						
+						<p:column headerText="Descrição" sortBy="#{item.receita.dsReceita}"
+							filterBy="#{item.receita.dsReceita}" filterMatchMode="contains">
+							<h:outputText value="#{item.receita.dsReceita}"/>
+						</p:column>
+						
+						<p:column headerText="Acumulado" width="20%" style="text-align: right;">
+							<h:outputText id="vlrAcum" value="#{item.valorAcumulado}">
+								<f:convertNumber pattern="#,##0.00"/>
+							</h:outputText>
+						</p:column>
+							
+					</p:dataTable>
+				</div>
+				
+				<div class="ui-grid-col-6 caixa">
+					<p:dataTable id="valrecDataTable" value="#{lancReceitaBean.listaValores}" var="item" 
+						emptyMessage="Nenhuma informação a ser exibida"
+						style="font-size: .9em; margin-left: 7px">
+						
+						<p:column headerText="Quantidade" width="7%">
+							<h:outputText value="#{item.mesRef.nomeMes}"/>
+						</p:column>
+						
+						<p:column headerText="Quantidade" width="7%">
+							<h:outputText id="quantid" value="#{item.quantidade}" 
+								rendered="#{lancReceitaBean.receita.receita.categoria.medida.descricao eq 'Valor'}">
+								<f:convertNumber pattern="00000"/>
+							</h:outputText>
+							
+							<p:inputText id="quantidade" value="#{item.quantidade}" size="04" maxlength="05"
+								rendered="#{lancReceitaBean.receita.receita.categoria.medida.descricao eq 'Quantidade'}"
+								disabled="#{!item.mesRef.mesAberto}">
+								
+								<f:convertNumber pattern="00000"/>
+								<p:ajax event="blur" update="vlrTotal valorDespesa"/>
+								
+							</p:inputText>
+						</p:column>
+						
+						<p:column headerText="Valor Unitário" width="9%">
+							<p:inputText id="vlrUnitario" value="#{item.valorUnitario}" size="14" maxlength="15"
+								styleClass="moeda"
+								disabled="#{!item.mesRef.mesAberto}">
+								<f:convertNumber minFractionDigits="2" maxFractionDigits="2"/>
+								
+								<p:ajax event="blur" update="vlrTotal valorDespesa"/>
+							</p:inputText>
+						</p:column>	
+						
+						<p:column headerText="Valor Total" width="9%" style="text-align: right;">
+							<h:outputText id="vlrTotal" value="#{item.valorTotal}">
+								<f:convertNumber pattern="#,##0.00"/>
+							</h:outputText>
+						</p:column>
+							
+						<p:column headerText="% Deduções" width="9%" styleClass="direita">
+							<h:outputText id="percDespesa" size="5" value="#{item.percDespesa}">
+								<f:convertNumber minFractionDigits="2" type="number"/>	
+							</h:outputText>
+			            		
+			            	<p:commandLink 
+			            		title="% Deduções sobre a receita"
+								action="#{lancReceitaBean.listarCustoVenda}"
+								process="@this" 
+								update="frm:receitaEquipeDialog"
+								oncomplete="PF('receitaEquipeDialogWidgetVar').show()"
+								style="margin-left: 5px">
+								
+								<f:setPropertyActionListener value="#{item}" target="#{lancReceitaBean.recMes}"/>
+								
+								<h:graphicImage value="../resources/ctbli9/images/detalhe.png"
+									title="Mergulho nos detalhes das deduções"/>
+			
+							</p:commandLink>
+							
+							
+							<h:graphicImage value="../resources/ctbli9/images/aviso2.png"
+								title="AVISO: Receita sem parâmetros de dedução cadastrados"
+								rendered="#{(lancReceitaBean.itemSemReceita(item))}" style="margin-left: 5px" />
+								
+							<h:outputText value=" " style="margin-left: 21px"
+								rendered="#{!(lancReceitaBean.itemSemReceita(item))}"/>
+							
+						</p:column>	
+						
+						<p:column headerText="Valor Deduções" width="8%" styleClass="direita">
+							<h:outputText id="valorDespesa" size="12" value="#{item.valorDespesa}" >
+								<f:convertNumber pattern="#,##0.00"/>
+							</h:outputText>
+						</p:column>
+							
+						<p:column headerText="Lucro Bruto" width="8%" styleClass="direita">
+							<h:outputText id="lucrobruto" value="#{item.lucroBruto}">
+								<f:convertNumber pattern="#,##0.00"/>
+							</h:outputText>
+						</p:column>						
+					
+					</p:dataTable>
+				</div>
+			</div>
+		</div>
+		
+		
+		<!-- DETALHE DAS DEPESAS -->
+		<p:dialog id="receitaEquipeDialog" header="Deduções de Venda" widgetVar="receitaEquipeDialogWidgetVar"
+			modal="true" resizable="false" closeOnEscape="true">
+			
+			<p:messages id="receitaEquipeMessages"/>
+			
+			<h:panelGrid id="receitaEquipePanelGrid" columns="1"
+				rendered="#{lancReceitaBean.recMes ne null}">
+				
+				<h:panelGrid columns="2">
+					<p:outputLabel value="Receita: "/>
+					<h:panelGroup>
+						<h:outputText value="#{lancReceitaBean.receita.receita.sgReceita} - 
+						#{lancReceitaBean.receita.receita.categoria.dsCategoria} - 
+						#{lancReceitaBean.receita.receita.dsReceita}" styleClass="textoNegrito"/>
+					</h:panelGroup>
+					
+					<p:outputLabel value="Conta Contábil: "/>
+					<h:panelGroup>
+						<h:outputText value="#{lancReceitaBean.receita.receita.contaReceita.cdConta} - 
+							#{lancReceitaBean.receita.receita.contaReceita.dsConta}" styleClass="textoNegrito"/>
+					</h:panelGroup>
+					
+				</h:panelGrid>
+				
+				
+				<p:scrollPanel mode="native" style="height:300px">
+				
+					<p:dataTable id="despesasDataTable" style="width:970px;"  
+						value="#{lancReceitaBean.recMes.listaDespesas}"
+						var="item" emptyMessage="Nenhuma informação a ser exibida"
+						rowHover="true">
+						
+						<p:columnGroup type="header">
+							<p:row>  
+					            <p:column headerText="Conta" width="20%"/>  
+					            <p:column headerText="Descrição" width="45%"/>  
+					            <p:column headerText="Tipo" width="10%"/>  
+					            <p:column headerText="Percentual" width="10%" style="text-align: right;"/>  
+					            <p:column headerText="Valor" width="15%" style="text-align: right;"/>  
+					        </p:row>  
+					        
+					        <p:row>
+								<p:column colspan="4" headerText="Valor da Receita:" styleClass="direita"/>
+								<p:column style="text-align: right">
+									<f:facet name="header">
+										<h:outputText value="#{lancReceitaBean.recMes.valorTotal}">
+											<f:convertNumber type="number" pattern="#,##0.00"/>
+										</h:outputText>
+									</f:facet>
+								</p:column>
+							</p:row>
+							
+							<p:row>
+								<p:column colspan="4" headerText="Total de Deduções:" styleClass="direita"/>
+								<p:column style="text-align: right">
+									<f:facet name="header">
+										<h:outputText value="#{lancReceitaBean.recMes.valorDespesa}">
+											<f:convertNumber type="number" pattern="#,##0.00"/>
+										</h:outputText>
+									</f:facet>
+								</p:column>
+							</p:row>
+							
+							<p:row>
+								<p:column colspan="4" headerText="Lucro Bruto:" styleClass="direita"/>
+								<p:column style="text-align: right">
+									<f:facet name="header">
+										<h:outputText value="#{lancReceitaBean.recMes.lucroBruto}">
+											<f:convertNumber type="number" pattern="#,##0.00"/>
+										</h:outputText>
+									</f:facet>
+								</p:column>
+							</p:row>
+							
+						</p:columnGroup>
+						
+						<p:column>
+							<h:outputText value="#{item.conta.cdConta}" styleClass="textoNegrito"/>
+						</p:column>
+						
+						<p:column>
+							<h:outputText value="#{item.conta.dsConta}"/>
+						</p:column>
+						
+						<p:column>
+							<h:outputText value="#{item.conta.tipo.descricao}"/>
+						</p:column>
+						
+						<p:column style="text-align: right;">
+							<h:outputText id="percDespesa" value="#{item.percDespesa}%">
+								<f:convertNumber type="number" minFractionDigits="2" maxFractionDigits="2"/>
+							</h:outputText>
+						</p:column>
+										
+						<p:column style="text-align: right;">
+							<h:outputText id="valorDespesa" value="#{item.valorDespesa}" size="12" readonly="true">
+								<f:convertNumber type="number" minFractionDigits="2"/>
+							</h:outputText>
+						</p:column>										
+					</p:dataTable>
+					
+				</p:scrollPanel>
+			</h:panelGrid>
+		</p:dialog>	
+		
+		
+		<!-- RECEITAS DO ANO ANTERIOR -->
+		<p:dialog id="receitaAnteriorDialog" header="#{lancReceitaBean.titulo}" widgetVar="receitaAnteriorDialogWidgetVar"
+			modal="true" resizable="false" closeOnEscape="true">
+			
+			<h:panelGrid columns="2">
+				<p:outputLabel value="Receita"/>
+				<h:outputText value="#{lancReceitaBean.receita.receita.sgReceita} - 
+					#{lancReceitaBean.receita.receita.dsReceita}"
+					styleClass="textoNegrito"/>
+
+				<p:outputLabel value="Conta Contábil"/>
+				<h:outputText value="#{lancReceitaBean.receita.receita.contaReceita.cdConta} - 
+					#{lancReceitaBean.receita.receita.contaReceita.dsConta}"
+					styleClass="textoNegrito"/>
+				
+				<p:outputLabel value="Centro de Custo"/>
+				<h:outputText value="#{lancReceitaBean.vendedorFiltro.setor.codExterno} - 
+					#{lancReceitaBean.vendedorFiltro.setor.cecDsResumida} - 
+					#{lancReceitaBean.vendedorFiltro.setor.filial.sgFilial}"
+					styleClass="textoNegrito"/>
+				
+				<p:outputLabel value="Valor no Período"/>
+				<h:outputText value="#{lancReceitaBean.recMes.valorTotal}" styleClass="textoNegrito">
+					<f:convertNumber pattern="#,##0.00"/>
+				</h:outputText>
+				
+			</h:panelGrid>
+		
+		</p:dialog>
+				
+	</h:form>		
+</ui:define>
+
+<ui:define name="rodape">1.0.0</ui:define>
+
+</ui:composition>

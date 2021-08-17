@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+ 	xmlns:h="http://xmlns.jcp.org/jsf/html"
+ 	xmlns:f="http://xmlns.jcp.org/jsf/core"
+ 	xmlns:p="http://primefaces.org/ui"
+ 	xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+ 	template="/WEB-INF/templates/Layout.xhtml">
+
+<ui:define name="titulo">Administração</ui:define>
+
+<ui:define name="conteudo">
+
+	<h:form id="frmAdmin">
+		<p:messages id="messages" />
+
+		<p:toolbar id="adminToolbar">
+			<f:facet name="left">
+				<p:commandButton value="Listar" icon="fa fa-search" 
+					actionListener="#{adminBean.listarUsuarios}" update="usuariosDataTable messages"
+					process="@this"/>
+				
+				<p:commandButton value="Processa SQL" icon="fa fa-gear"
+					oncomplete="PF('sqlDialogWidgetVar').show()"
+					update="sqlDialog" process="@this"/>
+					
+				<p:commandButton value="Limpar Senha" icon="fa fa-refresh"
+					disabled="#{not adminBean.itemSelecionado}"
+					actionListener="#{adminBean.limparSenha}" update="messages" 
+					process="@this">
+					<p:confirm icon="ui-icon-alert" header="Confirmação Limpeza" 
+	            		message="Deseka limpar a senha deste usuário?" />
+				</p:commandButton>
+					
+				<p:commandButton value="Acessos" icon="fa fa-search"
+					disabled="#{not adminBean.itemSelecionado}" 
+					actionListener="#{adminBean.listarAcessos}"
+					oncomplete="PF('acessosDialogWidgetVar').show()"
+	            	update="acessosDialog" process="@this"/>
+				
+				<span class="ui-separator">
+	                <span class="ui-icon ui-icon-grip-dotted-vertical" />
+	            </span>
+	            
+			</f:facet>
+		</p:toolbar>
+		
+		<p:spacer height="10" />
+		
+		<p:dataTable id="usuariosDataTable" style="width:970px;" value="#{adminBean.listaUsuario}" 
+			var="item" emptyMessage="Nenhuma informação a ser exibida"
+			paginator="true" rows="15" paginatorPosition="bottom"
+			selectionMode="single" selection="#{adminBean.usuario}" rowKey="#{item.logUsuario}">
+			
+			<p:ajax event="rowSelect" update="frmAdmin:adminToolbar" />
+			<p:ajax event="rowUnselect" update="frmAdmin:adminToolbar" />
+			
+			<p:column headerText="Login" width="20%" sortBy="#{item.logUsuario}">
+				<h:outputText value="#{item.logUsuario}"/>
+			</p:column>
+										
+		</p:dataTable>
+		
+		<p:dialog id="acessosDialog" header="Log de Acessos por usuário" widgetVar="acessosDialogWidgetVar"
+			modal="true" resizable="false" closeOnEscape="true">
+		
+			<p:dataTable id="acessosDataTable" style="width:970px;" value="#{adminBean.listaLogAcesso}" 
+				var="item" emptyMessage="Nenhuma informação a ser exibida"
+				paginator="true" rows="15" paginatorPosition="bottom">
+				
+				<p:column headerText="Usuário" width="20%">
+					<h:outputText value="#{item.usuario.logUsuario}"/>
+				</p:column>
+				
+				<p:column headerText="Data Acesso" width="20%" sortBy="#{item.dtLog}">
+					<h:outputText value="#{item.dtLog}">
+						<f:convertDateTime pattern="dd/MM/yyyy HH:mm:ss"/>
+					</h:outputText>
+				</p:column>
+											
+				<p:column headerText="Programa" width="20%">
+					<h:outputText value="#{item.programa.nmPrograma}"/>
+				</p:column>
+				
+			</p:dataTable>
+			
+		</p:dialog>
+
+
+		<p:dialog id="sqlDialog" header="Execução de SQL" widgetVar="sqlDialogWidgetVar"
+			modal="true" resizable="false" closeOnEscape="true">
+			<p:messages id="sqlMessages"/>
+			
+			<p:inputTextarea id="sqlTextarea" rows="7" cols="100" value="#{adminBean.sql}" />
+			<br/>
+ 					
+			<p:commandButton id="Processa" value="Executar" actionListener="#{adminBean.processa}"
+					update="sqlMessages" process="sqlDialog"/>
+				
+			<p:commandButton value="Voltar" 
+					oncomplete="PF('sqlDialogWidgetVar').hide()" process="sqlDialog"/>
+				
+ 		</p:dialog>
+ 		
+					
+	</h:form>		
+</ui:define>
+
+<ui:define name="rodape">Evolução Mensal</ui:define>
+
+</ui:composition>

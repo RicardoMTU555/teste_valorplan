@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+ 	xmlns:h="http://xmlns.jcp.org/jsf/html"
+ 	xmlns:f="http://xmlns.jcp.org/jsf/core"
+ 	xmlns:p="http://primefaces.org/ui"
+ 	xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+ 	template="/WEB-INF/templates/Layout.xhtml">
+
+<ui:define name="titulo">Lançamento de Despesas Gerais</ui:define>
+
+<ui:define name="conteudo">
+
+	<f:metadata>
+		<f:viewAction action="#{loginBean.validarPermissao('131;')}" />
+		<f:viewAction action="#{depArvoreBean.criarEstruturaDepartamentos}"/>
+	</f:metadata>
+
+	<h:form id="frm">
+		<p:growl id="messages" />
+				
+		<div class="ui-grid  ui-grid-responsive">
+			<div class="ui-grid-row">	
+				<div class="ui-grid-col-3 coluna-arvore">
+    				<p:tree id="departamentoTree" value="#{depArvoreBean.estrut}" var="doc"
+				        selectionMode="single" selection="#{depArvoreBean.selectedNode}"
+				        style="border: 0">
+				       
+				        <p:treeNode expandedIcon="fa fa-folder-open" collapsedIcon="fa fa-folder">
+				            <h:outputText value="#{doc.sgDepartamento}:" styleClass="textoNegrito"/>
+				            <h:outputText value=" #{doc.responsavel.nomeVinculo}"/>
+				        </p:treeNode>
+							
+						<p:treeNode type="setor" icon="fa fa-file">
+				            <h:outputText value="#{doc.codExterno} - #{doc.cecDsResumida}: #{doc.responsavel.nomeVinculo}" />
+				        </p:treeNode>
+				       	
+				        <p:treeNode type="vendedor" icon="fa fa-user">
+				            <h:outputText value="#{doc.nomeVinculo}" />
+				        </p:treeNode>		
+									        
+				        <p:ajax event="select" process="@this" 
+				        	update="frm:valoresDT frm:despesaDataTable frm:despesaPanel"
+							listener="#{lancDespesaGeralBean.limpaDespesa(depArvoreBean.selectedNode)}"
+							oncomplete="configurarMoeda()"/>
+						
+				        <p:ajax event="unselect" process="@this" 
+				        	update="frm:valoresDT frm:despesaDataTable frm:despesaPanel"
+							listener="#{lancDespesaGeralBean.limpaDespesa(depArvoreBean.selectedNode)}"
+							oncomplete="configurarMoeda()"/>
+				    </p:tree>
+    			</div>			
+				
+				<div class="ui-grid-col-10">
+				
+					<p:panel id="despesaPanel">
+						<h:panelGrid columns="1">
+							<h:panelGroup>
+								<p:outputLabel value="Centro de Custo:" style="padding-right: 5px; font-weight: bold;"/>
+								<h:outputText value="#{lancDespesaGeralBean.cenCusto.codExterno} - 
+									#{lancDespesaGeralBean.cenCusto.cecDsResumida}" />
+							
+								<p:outputLabel value="Filial:" style="padding-left: 20px; padding-right: 5px; font-weight: bold;"/>
+								<h:outputText value="#{lancDespesaGeralBean.cenCusto.filial.sgFilial}" />
+							</h:panelGroup>								
+						
+						</h:panelGrid>
+					</p:panel>
+					
+					<div class="ui-grid-col-9">
+					
+						
+						<p:dataTable id="despesaDataTable" value="#{lancDespesaGeralBean.listaDespesa}" var="item" 
+							style="width: 100%"
+							selectionMode="single" selection="#{lancDespesaGeralBean.despesa}" rowKey="#{item.conta.cdConta}"
+							emptyMessage="Nenhuma informação encontrada para o filtro selecionado"
+							scrollable="true" scrollHeight="390">
+						
+							<p:ajax event="rowSelect" listener="#{lancDespesaGeralBean.listaValores}" 
+								update="frm:despesaPanel frm:valoresPanelGrid" 
+								oncomplete="configurarMoeda()"/>
+							<p:ajax event="rowUnselect" listener="#{lancDespesaGeralBean.listaValores}" 
+								update="frm:despesaPanel frm:valoresPanelGrid" />
+							
+							<p:column headerText="Despesa" width="14%" sortBy="#{item.conta.cdConta}">
+							
+								<p:commandLink
+									title="Mostra despesa do ano anterior"
+									action="#{lancDespesaGeralBean.mostrarDespesaAnterior}"
+									process="@this"
+									update="frm:despesaAnteriorDialog"
+									oncomplete="PF('despesaAnteriorDialogWidgetVar').show()">
+															
+									<f:setPropertyActionListener value="#{item}" target="#{lancDespesaGeralBean.despesa}"/>
+									
+									<h:outputText value="#{item.conta.sgConta}" styleClass="textoNegrito"/>	
+								</p:commandLink>
+								<br/>
+								<h:outputText value="#{item.conta.cdConta}" style="font-size: .9em"/>
+							</p:column>
+							
+							<p:column headerText="Descrição" sortBy="#{item.conta.dsConta}">
+								<h:outputText value="#{item.conta.dsConta}"/>
+							</p:column>
+							
+							<p:column headerText="Classificacao" width="20%" sortBy="#{item.classifDRE}" 
+								styleClass="#{item.classifDRE eq 'DESP.NÃO RELACIONADA' ? 'fundoVermelho' : ''}">
+								<h:outputText value="#{item.classifDRE}"/>
+							</p:column>
+							
+							<p:column id="acumulado" headerText="Acumulado Anual" width="13%" styleClass="direita" sortBy="#{item.vrContaAcum}">
+								<h:outputText value="#{item.vrContaAcum}" 
+									styleClass="#{item.vrContaAcum > 0 ? 'textoNegrito' : ''}">
+									<f:convertNumber pattern="#,##0.00"/>
+								</h:outputText>
+							</p:column>
+						</p:dataTable>
+					</div>
+					
+					<div class="ui-grid-col-3">
+						<h:panelGrid id="valoresPanelGrid">
+							<p:dataTable id="valoresDT" value="#{lancDespesaGeralBean.valores}" var="item"
+								style="width: 100%"
+								rowHover="true"
+								rowStyleClass="fundoBranco">
+							
+								<p:column headerText="Mes">
+									<h:outputText value="#{item.mesRef.nomeMes}"/>
+								</p:column>
+							
+								<p:column headerText="Valor" styleClass="#{item.mesRef.mesAberto ? '' : 'fundoCinza'}">
+								
+									<p:inputText value="#{item.vrOrcado}" maxlength="15" 
+										style="padding: 0; margin: 0; width: 100% !important" styleClass="moeda"
+					                	title="#{item.mesRef.mesAberto ? '' : 'MÊS FECHADO'}"
+					                	disabled="#{!item.mesRef.mesAberto}">
+											
+										<f:convertNumber maxFractionDigits="2" minFractionDigits="2"/>
+									</p:inputText>
+					            </p:column>
+											
+							</p:dataTable>
+							
+							<!-- REGINALDO: resolver problema da atualização -->
+							<p:commandButton id="gravarCommandButton" value="Salvar" title="Confirma alteração dos dados" 
+				            	disabled="#{lancDespesaGeralBean.inativo}"
+				            	actionListener="#{lancDespesaGeralBean.gravarOrcamento}"
+				            	process="@this frm:valoresDT" 
+				            	update="messages frm:despesaDataTable frm:despesaPanel"
+				            	oncomplete="configurarMoeda()"
+				            	style="width: 100%"/>
+						
+						</h:panelGrid>
+					</div>
+					
+					
+				</div>
+			</div>
+		</div>
+		
+		
+		<!-- DESPESAS DO ANO ANTERIOR -->
+		<p:dialog id="despesaAnteriorDialog" header="Receita Ano Anterior" widgetVar="despesaAnteriorDialogWidgetVar"
+			modal="true" resizable="false" closeOnEscape="true">
+			
+			<p:panel style="width: 500px">
+				<h:panelGrid columns="2">
+					<p:outputLabel value="Despesa"/>
+					<h:outputText value="#{lancDespesaGeralBean.despesa.conta.cdConta} - 
+						#{lancDespesaGeralBean.despesa.conta.sgConta} -
+						#{lancDespesaGeralBean.despesa.conta.dsConta}"
+						styleClass="textoNegrito"/>
+					
+					<p:outputLabel value="Centro de Custo"/>
+					<h:outputText value="#{lancDespesaGeralBean.cenCusto.codExterno} - 
+						#{lancDespesaGeralBean.cenCusto.cecDsResumida} - 
+						#{lancDespesaGeralBean.cenCusto.filial.sgFilial}"
+						styleClass="textoNegrito"/>
+				
+				</h:panelGrid>
+	
+				<p:dataTable id="valoresAntDT" value="#{lancDespesaGeralBean.valoresAnt}" var="item"
+					style="width: 100%"
+					rowHover="true"
+					rowStyleClass="fundoBranco">
+				
+					<f:facet name="header">
+						<h:outputText value="Valor no Período Anterior"/>
+					</f:facet>
+					
+					<p:column headerText="Mes" styleClass="central">
+						<h:outputText value="#{item.mesRef.nomeMes}"/>
+					</p:column>
+				
+					<p:column headerText="Valor Orçado" styleClass="direita">
+						<h:outputText value="#{item.vrOrcado}">
+	               			<f:convertNumber pattern="#,##0.00"/>
+	               		</h:outputText>
+					</p:column>
+								
+					<p:column headerText="Valor Realizado" styleClass="direita">
+						<h:outputText value="#{item.vrRealizado}">
+	               			<f:convertNumber pattern="#,##0.00"/>
+	               		</h:outputText>
+					</p:column>
+					
+					<p:columnGroup type="footer">
+						<p:column footerText="Total:" styleClass="central"/>
+						<p:column styleClass="direita">
+							<f:facet name="footer">
+								<h:outputText value="#{lancDespesaGeralBean.totalAnterior.vrOrcado}">
+									<f:convertNumber type="currency"/>
+								</h:outputText>
+							</f:facet>
+						</p:column>
+						
+						<p:column styleClass="direita">
+							<f:facet name="footer">
+								<h:outputText value="#{lancDespesaGeralBean.totalAnterior.vrRealizado}">
+									<f:convertNumber type="currency"/>
+								</h:outputText>
+							</f:facet>
+						</p:column>
+					</p:columnGroup>
+								
+				</p:dataTable>
+			</p:panel>
+		
+		</p:dialog>	
+		
+	</h:form>		
+</ui:define>
+
+<ui:define name="rodape">1.0.0</ui:define>
+
+</ui:composition>

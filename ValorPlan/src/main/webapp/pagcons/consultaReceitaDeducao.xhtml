@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+ 	xmlns:h="http://xmlns.jcp.org/jsf/html"
+ 	xmlns:f="http://xmlns.jcp.org/jsf/core"
+ 	xmlns:p="http://primefaces.org/ui"
+ 	xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+ 	template="/WEB-INF/templates/Layout.xhtml">
+
+<ui:define name="titulo">Consulta Receitas X Deduções</ui:define>
+
+<ui:define name="conteudo">
+
+	<f:metadata>
+		<f:viewAction action="#{loginBean.validarPermissao(';0;')}"/>		
+	</f:metadata>
+
+	<h:form id="frm">
+		
+		<p:messages id="messages" autoUpdate="true"/>
+		
+		<p:commandButton value="Gerar Planilha" icon="fa fa-file-excel-o" ajax="true" 
+			process="@this"
+			update="@form"
+			title="Gera planilha de saldos de contas"
+			actionListener="#{consultaRecDesBean.baixarPlanilhaGeral}" 
+			onclick="PrimeFaces.monitorDownload(start, stop);">
+			
+		     <p:fileDownload value="#{consultaRecDesBean.file}" />
+
+		</p:commandButton>
+		<h:panelGrid columns="1" rendered="#{consultaRecDesBean.processoConcluido}">
+			<h2>Planilha gerada</h2>
+		</h:panelGrid>
+	</h:form>		
+</ui:define>
+
+<ui:define name="rodape">1.0.0</ui:define>
+
+</ui:composition>

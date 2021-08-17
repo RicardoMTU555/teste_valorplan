@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+ 	xmlns:h="http://xmlns.jcp.org/jsf/html"
+ 	xmlns:f="http://xmlns.jcp.org/jsf/core"
+ 	xmlns:p="http://primefaces.org/ui"
+ 	xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+ 	template="/WEB-INF/templates/Layout.xhtml">
+
+<ui:define name="titulo">Cadastro de Departamentos</ui:define>
+
+<ui:define name="conteudo">
+
+	<f:metadata>
+		<f:viewAction action="#{loginBean.validarPermissao('5;')}"/>
+	</f:metadata>	
+
+	<h:form id="frm">
+		<p:messages id="messages" escape="false"/>
+		
+		<div id="estrutura">
+			<h3 style="margin-top:5;margin-botton:5">
+				<h:outputText value="Ano da Estrutura departamental: "/>
+				<p:inputMask id="nrAno" mask="9999" value="#{departamentoBean.anoReferencia.ano}" size="4">
+					<p:ajax event="blur" listener="#{departamentoBean.listarPrimeiroNivel}" process="nrAno" update="frm:cadDataTable"/>
+				</p:inputMask>
+			</h3>
+			
+			<h2 style="margin-top:10">
+				<h:outputText value="#{departamentoBean.arvore}" escape="false"/>
+			</h2>
+			
+		</div>
+
+		<p:toolbar id="cadToolbar">
+			<f:facet name="left">
+				<p:commandButton value="Incluir" icon="fa fa-plus"
+	            	title="Inclui novo departametno"
+	            	actionListener="#{departamentoBean.inicializarRegistro}" 
+	            	oncomplete="PF('departamentoDialogWidgetVar').show()"
+	            	update="frm:departamentoDialog" process="@this">
+	            	<p:resetInput target="frm:departamentoDialog"/>
+	            </p:commandButton>
+	
+				<span class="ui-separator">
+	                <span class="ui-icon ui-icon-grip-dotted-vertical" />
+	            </span>
+	            
+	            <p:commandButton value="Voltar" icon="fa fa-undo"
+	            	title="Retorna ao nivel anterior"
+	            	action="#{departamentoBean.listarDepartamentoAnterior}"
+					process="@this" 
+					update="@form"/>
+	            	
+	            <span class="ui-separator">
+	                <span class="ui-icon ui-icon-grip-dotted-vertical" />
+	            </span>
+	            
+	            <p:button value="Estrutura" icon="fa fa-list-alt" 
+	            	title="Ver Estrutura Organizacional" 
+	            	outcome="/pagcons/consDepartamento?faces-redirect=true"
+	            	ajax="false"/>
+	            
+				<span class="ui-separator">
+	                <span class="ui-icon ui-icon-grip-dotted-vertical" />
+	            </span>
+	
+				<p:commandButton value="Replicar" icon="fa fa-gears"
+	            	title="Replica estrutura organizacional de um determinado ano em outro"
+	            	actionListener="#{departamentoBean.inicializarRegistro}" 
+	            	oncomplete="PF('replicaDialogWidgetVar').show()"
+	            	update="frm:replicaDialog" process="@this">
+	            	<p:resetInput target="frm:replicaDialog"/>
+	            </p:commandButton>
+	
+				<span class="ui-separator"> <span
+					class="ui-icon ui-icon-grip-dotted-vertical" />
+				</span>
+				
+				<p:commandButton value="Planilha" icon="fa fa-file-excel-o"
+	            	title="Gera planilha da estrutura organizacional"
+	            	actionListener="#{departamentoBean.baixarPlanilha}" 
+	            	ajax="false" process="@this">
+	            	
+	            	<p:fileDownload value="#{departamentoBean.file}" />
+	            	
+	            </p:commandButton>
+				
+			</f:facet>
+		</p:toolbar>
+
+		<p:dataTable id="cadDataTable" style="width:100%;" value="#{departamentoBean.listaDepto}" 
+			var="item" emptyMessage="Nenhuma informação a ser exibida"
+			selectionMode="single" selection="#{departamentoBean.deptoSel}" rowKey="#{item.cdDepartamento}"
+			reflow="true">
+				
+			<p:ajax event="rowSelect" update="frm:cadToolbar" />
+			<p:ajax event="rowUnselect" update="frm:cadToolbar" />
+			
+			<p:column headerText="Ações" width="10%" styleClass="central">
+			
+				<p:commandLink title="Departamentos filhos"
+					action="#{departamentoBean.listarDepartamentoFilho}"
+					process="@this" 
+					update="@form"
+					style="margin-left: 5px">
+					
+					<f:setPropertyActionListener value="#{item}" target="#{departamentoBean.deptoPai}"/>
+					
+					<h:graphicImage value="../resources/ctbli9/images/detalhe.png"
+						title="Departamentos filhos"/>
+				</p:commandLink>
+				
+				<p:commandLink title="Editar"
+					action="#{departamentoBean.alterarRegistro}"
+					process="@this" 
+					update="frm:departamentoDialog"
+					oncomplete="PF('departamentoDialogWidgetVar').show()"
+					style="margin-left: 5px">
+					
+					<f:setPropertyActionListener value="#{item}" target="#{departamentoBean.deptoSel}"/>
+					
+					<p:resetInput target="frm:departamentoDialog"/>
+					
+					<h:graphicImage value="../resources/ctbli9/images/edita.png"
+						title="Edita o departamento"/>
+
+				</p:commandLink>
+				
+				<p:commandLink title="Excluir"
+					action="#{departamentoBean.excluir}"
+					process="@this" 
+					update="frm:messages frm:cadDataTable"
+					style="margin-left: 5px">
+					
+					<f:setPropertyActionListener value="#{item}" target="#{departamentoBean.deptoSel}"/>
+					
+					<p:confirm icon="ui-icon-alert" header="Confirmação de Exclusão" 
+	            		message="Posso Excluir o departamento?" />
+					
+					<h:graphicImage value="../resources/ctbli9/images/delete.png"
+						title="Excluir Departamentos"/>
+				</p:commandLink>				
+			</p:column>
+				
+			<p:column headerText="Sigla" width="20%" sortBy="#{item.sgDepartamento}">
+				<h:outputText value="#{item.sgDepartamento}" />
+			</p:column>
+			
+			<p:column headerText="Nome Departamento" width="30%" sortBy="#{item.dsDepartamento}">
+				<h:outputText value="#{item.dsDepartamento}" />
+			</p:column>
+									
+			<p:column headerText="Gerente" width="40%" sortBy="#{item.responsavel.nomeVinculo}">
+				<h:outputText value="#{item.responsavel.nomeVinculo}" />
+			</p:column>	
+		</p:dataTable>
+		
+		
+		
+		<p:dialog id="departamentoDialog" header="Cadastro de Departamentos" widgetVar="departamentoDialogWidgetVar"
+			modal="true" resizable="false" closeOnEscape="true">
+			<p:messages id="departamentoMessages"/>
+			
+			<p:defaultCommand target="salvarCommandButton" scope="departamentoDialog" />
+		
+			<h:panelGrid id="departamentoPanelGrid" columns="2" columnClasses="colunaEsquerda,colunaDireita"
+				rendered="#{departamentoBean.deptoSel ne null}">
+				
+				<p:outputLabel value="Ano Referência:"/>
+				<h:outputText value="#{departamentoBean.deptoSel.nrAno}">
+					<f:convertNumber pattern="0000" />
+				</h:outputText>
+				
+				<p:outputLabel value="Sigla:" for="sgDepartamento"/>
+				<p:inputText value="#{departamentoBean.deptoSel.sgDepartamento}" id="sgDepartamento" size="10" maxlength="10"/>
+
+				<p:outputLabel value="Nome:" for="dsDepartamento"/>
+				<p:inputText value="#{departamentoBean.deptoSel.dsDepartamento}" id="dsDepartamento" size="40" maxlength="40"/>
+				
+				<p:outputLabel value="Departamento PAI:"/>
+				<h:outputText value="#{departamentoBean.deptoSel.departamentoPai.dsDepartamento}" styleClass="textoNegrito"/>
+				
+				<p:outputLabel value="Gestor Responsável:" for="funcLider"/>
+				<p:selectOneMenu id="funcLider" value="#{departamentoBean.deptoSel.responsavel}" var="func"
+					filter="true" filterMatchMode="contains">
+					
+					<f:selectItem itemLabel="Selecione..."/>
+					<f:selectItems value="#{departamentoBean.listaRecurso}" var="item"
+						itemLabel="#{item.nomeVinculo}" itemValue="#{item}"/>
+						
+					<p:column headerText="Recurso">
+						<h:outputText value="#{func.nomeVinculo}" />
+					</p:column>
+					<p:column headerText="Setor">
+						<h:outputText value="#{func.setor.codExterno}" />
+					</p:column>
+					<p:column headerText="Descrição">
+						<h:outputText value="#{func.setor.cecDsResumida}" />
+					</p:column>
+				</p:selectOneMenu>
+					
+				<h:outputLabel />
+				
+				<p:commandButton id="salvarCommandButton" value="Salvar" 
+					actionListener="#{departamentoBean.salvar}"
+					process="departamentoDialog"
+					update="departamentoPanelGrid departamentoMessages"
+					oncomplete="if (!args.validationFailed) PF('departamentoDialogWidgetVar').hide()"/>
+					
+			</h:panelGrid>		
+		</p:dialog>
+		
+		<ui:include src="/WEB-INF/templates/cadastro/_replicaEstrutura.xhtml" />
+			
+	</h:form>		
+</ui:define>
+
+<ui:define name="rodape">1.0.0</ui:define>
+
+</ui:composition>

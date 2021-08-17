@@ -1,0 +1,95 @@
+/* TOGGLE */
+.ci9-toggle {
+	float: right;        /* flutuando a DIREITA */
+	/*line-height: 50px;    tamanho da linha = tabamno do topo ==> jeito de CENTRALIZAR NA VERTICAL */
+	padding-top: 25px;
+	margin-right: 15px;  /* margem direita: descolar um pouco do canto */
+	
+	color: #fff;         /* cor da FONTE: botão branco */
+}
+@media (min-width: 767px) { /* media-queries: breakpoint: 767 para CIMA */
+	.ci9-toggle {
+		display: none;      /* não display (fica invisível) na tela grande */
+	}
+}
+
+.textoNegrito {
+	font-weight: bold;
+}
+.textoMaiusculo {
+	text-transform:uppercase
+}
+.textoMinusculo{
+	text-transform:lowercase;
+}
+
+
+/* CORES de fundo para células, tabelas, paineis */
+.fundoAzulAgua {
+	background-color: aqua;	
+}
+.fundoAzulEscuro {
+	background-color: blue;	
+}
+.fundoAzulCinza {
+	background: #a7a7fc;
+}
+.fundoAmarelo {
+	background-color: yellow;
+}
+.fundoLaranja {
+	background-color: orange;
+}
+.fundoVerdeClaro {
+	background-color: #00ff80;
+}
+.fundoVerde {
+	background-color: green;	
+}
+.fundoVermelho {
+	background-color: red;
+	color: white;
+}
+.fundoCinza {
+	background-color: #b7b4bc;	
+}
+.fundoBranco {
+	background-color: white;	
+}
+/* FIM: CORES de fundo para células, tabelas, paineis */
+
+
+.central {
+	text-align: center;
+}
+
+.esquerda {
+	text-align: left;
+}
+.direita {
+	text-align: right !important;
+}
+
+
+.coluna-arvore {
+	padding-right: 5px;
+	height: 480px;
+	overflow-y: auto;
+	font-size: .9em;
+	border-right: 2px solid #c3c3c3;
+	
+}
+
+.coluna-arvore .ui-tree .ui-treenode {
+	color: black;
+}
+
+.espaco-link {
+	display: inline; 
+	padding-right: 5px;
+}
+
+.margem-botao {
+	margin-left: 5px;
+	margin-right: 5px !important;
+}

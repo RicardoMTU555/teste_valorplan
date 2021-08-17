@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+ 	xmlns:h="http://xmlns.jcp.org/jsf/html"
+ 	xmlns:f="http://xmlns.jcp.org/jsf/core"
+ 	xmlns:p="http://primefaces.org/ui"
+ 	xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+ 	template="/WEB-INF/templates/Layout.xhtml">
+
+<ui:define name="titulo">Cadastro de Plano de Contas</ui:define>
+
+<ui:define name="conteudo">
+	
+	<f:metadata>
+		<f:viewAction action="#{loginBean.validarPermissao('11;')}"/>
+	</f:metadata>
+	
+	<h:form id="frm">
+		<p:growl id="messages" />
+		
+		<p:accordionPanel id="filtroAP">
+			<p:tab title="Filtro Contas">
+				<h:panelGrid id="filtroPanelgrid" style="width:100%" columns="4">
+					
+					<p:outputLabel value="Código:"/>
+					<p:inputText size="15" maxlength="15"
+						value="#{placonBean.filtro.cdConta}"/>
+						
+					<p:outputLabel value="Descrição:"/>
+					<p:inputText placeholder="Parte da Descrição..." size="20"
+						value="#{placonBean.filtro.dsConta}"/>
+								
+					<p:outputLabel value="Grupos" />
+			        <p:selectCheckboxMenu value="#{placonBean.filtro.grupos}" label="Grupos"
+			                              filter="true" filterMatchMode="startsWith" panelStyle="width:250px">
+			            
+			            <f:selectItems value="#{placonBean.grupos}" var="grupo" 
+			            	itemLabel="#{grupo.descricao}" itemValue="#{grupo}"/>
+			        </p:selectCheckboxMenu>
+				    
+				    <p:outputLabel value="Natureza:" />
+					<h:panelGroup>
+						<p:selectBooleanCheckbox value="#{placonBean.filtro.credora}" itemLabel="Credora " style="padding-rigth: 5px"/>
+						<p:selectBooleanCheckbox value="#{placonBean.filtro.devedora}" itemLabel="Devedora " style="padding-left: 5px"/>
+					</h:panelGroup>
+					
+				</h:panelGrid>
+			</p:tab>
+		</p:accordionPanel>
+		
+		<p:spacer height="5"/>
+			
+		<p:toolbar id="placonToolbar">
+			<f:facet name="left">
+				<p:commandButton value="Pesquisar" icon="fa fa-search" 
+					actionListener="#{placonBean.listar}"
+					process="@this frm:filtroAP"
+					update="placonDataTable messages"
+					oncomplete="PF('placonDataTableWV').filter()"/>
+				
+				<span class="ui-separator">
+	                <span class="ui-icon ui-icon-grip-dotted-vertical" />
+	            </span>
+	            
+	            <p:commandButton value="Incluir" icon="fa fa-plus"
+	            	actionListener="#{placonBean.inicializarRegistro}" 
+	            	oncomplete="PF('placonDialogWidgetVar').show()"
+	            	update="placonDialog" process="@this">
+	            	<p:resetInput target="placonDialog"/>
+	            </p:commandButton>
+	
+				<span class="ui-separator">
+	                <span class="ui-icon ui-icon-grip-dotted-vertical" />
+	            </span>
+	            
+	            <p:commandButton value="Editar" icon="fa fa-edit"
+	            	actionListener="#{placonBean.alterarRegistro}"
+	            	title="Edita o registro selecionado" 
+	            	disabled="#{not placonBean.itemSelecionado}"
+	            	oncomplete="PF('placonDialogWidgetVar').show()"
+	            	update="placonDialog" process="@this">
+	            	<p:resetInput target="placonDialog"/>
+	            </p:commandButton>
+	
+	            <p:commandButton value="Excluir" icon="fa fa-trash" 
+	            	title="Exclui o registro selecionado" 
+	            	disabled="#{not placonBean.itemSelecionado}"
+	            	actionListener="#{placonBean.excluir}"
+	            	update="messages placonDataTable placonToolbar"
+					process="@this">
+	            	<p:confirm icon="ui-icon-alert" header="Confirmação de Exclusão" 
+	            		message="Deseja Excluir a Conta Contábil?" />
+	            </p:commandButton>
+	            
+				<span class="ui-separator">
+	                <span class="ui-icon ui-icon-grip-dotted-vertical" />
+	            </span>
+	            
+	            <p:commandButton value="Excel" title="Gera Planilha Excel" icon="fa fa-file-excel-o"
+	            	ajax="false">
+	            	<p:dataExporter type="xls" target="placonDataTable" fileName="PlanilhaPlacon" />
+	            </p:commandButton>
+			</f:facet>
+		</p:toolbar>
+		
+
+		<p:spacer height="10" />
+		
+		<p:dataTable id="placonDataTable" value="#{placonBean.listaPlacon}" widgetVar="placonDataTableWV"
+			var="item" emptyMessage="Nenhuma informação a ser exibida"
+			filteredValue="#{placonBean.listaPlaconFiltrado}"
+			scrollable="true" scrollHeight="350"
+			selectionMode="single" selection="#{placonBean.conta}" rowKey="#{item.cdConta}">
+				
+			<p:ajax event="rowSelect" update="frm:placonToolbar" />		
+			<p:ajax event="rowUnselect" update="frm:placonToolbar" />
+				
+			<p:column headerText="Conta" width="10%" sortBy="#{item.cdConta}">
+				<h:outputText value="#{item.cdConta}">
+					<f:convertNumber pattern="00000000000"/>
+				</h:outputText>
+			</p:column>
+				
+			<p:column headerText="Sigla" width="10%" sortBy="#{item.sgConta}">
+				<h:outputText value="#{item.sgConta}" />
+			</p:column>
+				
+			<p:column headerText="Descrição" sortBy="#{item.dsConta}">
+				<h:outputText value="#{item.dsConta}" />
+			</p:column>
+				
+			<p:column headerText="Reduzida" width="10%">
+				<h:outputText value="#{item.cdContaReduzi}">
+					<f:convertNumber pattern="00000000000"/>
+				</h:outputText>
+			</p:column>
+				
+			<p:column headerText="Natureza" width="6%">
+				<h:outputText value="#{item.natureza.descricao}"/>
+			</p:column>
+								
+			<p:column headerText="Grupo" width="6%">
+				<h:outputText value="#{item.grupo.descricao}"/>
+			</p:column>
+			
+			<p:column headerText="Utilização" width="11%" filterBy="#{item.tipo.descricao}" filterMatchMode="contains">
+				<h:outputText value="#{item.tipo.descricao}"/>
+			</p:column>
+								
+		</p:dataTable>
+		
+		<p:dialog id="placonDialog" header="Conta Contábil" widgetVar="placonDialogWidgetVar"
+			modal="true" resizable="false" closeOnEscape="true">
+			<p:messages id="placonMessages"/>
+			
+			<p:defaultCommand target="salvarCommandButton" scope="placonDialog" />
+		
+			<h:panelGrid id="placonPanelGrid" columns="2" 
+				rendered="#{placonBean.conta ne null}">
+				
+				<p:outputLabel value="Código da Conta:" for="codigo"/>
+				<p:inputText id="codigo" size="15" maxlength="15" required="true"
+					value="#{placonBean.conta.cdConta}" 
+					disabled="#{!placonBean.nova}"/>
+					
+				<p:outputLabel value="Sigla" for="sigla" styleClass="textoMaiusculo"/>
+				<p:inputText id="sigla" size="10" maxlength="10" required="true"
+					value="#{placonBean.conta.sgConta}"/>
+				
+				<p:outputLabel value="Descrição" for="descricao"/>
+				<p:inputText id="descricao" size="50" maxlength="50" required="true"
+					value="#{placonBean.conta.dsConta}"/>
+				
+				<p:outputLabel value="Código Reduzido:" for="reduz"/>
+				<p:inputText id="reduz" size="15" maxlength="15" required="true"
+					value="#{placonBean.conta.cdContaReduzi}"/>
+				
+				<p:outputLabel value="Natureza:" for="idNatureza"/>
+				<p:selectOneRadio id="idNatureza" value="#{placonBean.conta.natureza}">
+					<f:selectItems value="#{placonBean.naturezas}" var="nat"
+						itemValue="#{nat}" itemLabel="#{nat.descricao}"/>
+				</p:selectOneRadio>
+				
+				<p:outputLabel value="Grupo de Contas:" for="idresult"/>
+				<p:selectOneMenu id="idresult" value="#{placonBean.conta.grupo}">
+					<f:selectItems value="#{placonBean.grupos}" var="gru"
+						itemValue="#{gru}" itemLabel="#{gru.descricao}"/>
+				</p:selectOneMenu>
+				
+				<p:outputLabel value="Utilização da Conta" for="tipoConta"/>
+				<p:selectOneMenu id="tipoConta" value="#{placonBean.conta.tipo}">
+					<f:selectItem itemLabel="Selecione..."/>
+					<f:selectItems value="#{placonBean.tiposConta}" var="tip"
+						itemValue="#{tip}" itemLabel="#{tip.descricao}"/>
+				</p:selectOneMenu>
+					
+				<h:outputLabel />
+				
+				<p:commandButton id="salvarCommandButton" value="Salvar" actionListener="#{placonBean.salvar}"
+					update="placonPanelGrid placonMessages"
+					oncomplete="if (!args.validationFailed) PF('placonDialogWidgetVar').hide(); PF('placonDataTableWV').filter()" 
+					process="placonDialog"/>
+					
+			</h:panelGrid>		
+		</p:dialog>
+			
+	</h:form>		
+</ui:define>
+
+<ui:define name="rodape">1.0.0</ui:define>
+
+</ui:composition>

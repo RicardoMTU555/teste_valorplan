@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+ 	xmlns:h="http://xmlns.jcp.org/jsf/html"
+ 	xmlns:f="http://xmlns.jcp.org/jsf/core"
+ 	xmlns:p="http://primefaces.org/ui"
+ 	xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+ 	template="/WEB-INF/templates/Layout.xhtml">
+
+<ui:define name="titulo">Comparativo Orçado X Realizado - DRE do Ano</ui:define>
+
+<ui:define name="conteudo">
+
+	<f:metadata>
+		<f:viewAction action="#{loginBean.validarPermissao('201;')}"/>
+		<f:viewAction action="#{consultaDreBean.inicializar}"/>
+	</f:metadata>
+
+	<h:form id="frm">
+		<p:messages id="messages" />
+		
+		<p:accordionPanel id="filtroAccordion" widgetVar="filtroAccordionWV">
+			<p:tab title="Filtro DRE - Demonstrativo do Resultado do Exercício">
+				<p:panel>
+					<h:panelGrid id="filtroPanelgrid" style="width:100%" columns="2">
+						
+						<h:panelGrid columns="1">
+						
+							<h:outputText value="Nivel Organizacional:" title="Agrupar a partir de qual nível"/>
+							<p:selectOneMenu value="#{consultaDreBean.nivel}" title="Agrupar a partir de qual nível">
+	
+								<f:selectItems value="#{consultaDreBean.listaNiveisDepto}" var="niv"
+									itemValue="#{niv}" itemLabel="#{niv}" />
+							</p:selectOneMenu>
+							<br/>
+							<p:outputLabel value="Ano Orçamento:" for="anoOrc"/>
+							<h:outputText id="anoOrc" value="#{planoBean.cenarioSelecionado.nrAno}" styleClass="textoNegrito"/>
+							<br/>
+							<h:outputText value="Agrupar por:" />
+							<p:selectOneRadio id="agruparPor" value="#{consultaDreBean.agrupaConta}" unselectable="true">
+					            <f:selectItem itemLabel="Conta Contábil" itemValue="true" />
+					            <f:selectItem itemLabel="Centro de Custo" itemValue="false" />
+					            	
+							</p:selectOneRadio>
+						</h:panelGrid>
+						
+						<h:panelGrid columns="1">
+							<p:outputLabel value="Filiais:" />
+							<p:selectManyMenu id="listaFiliais" value="#{consultaDreBean.filiaisSelecionadas}"
+								filter="true" filterMatchMode="contains" showCheckbox="true"
+					        	style="width: 170px" scrollHeight="125">
+					            
+								<f:selectItems value="#{consultaDreBean.filiais}" var="item"
+									itemValue="#{item.cdFilial}" itemLabel="#{item.sgFilial}" />
+									
+					        </p:selectManyMenu>
+							<h:panelGroup>
+						        <p:selectBooleanCheckbox value="#{consultaDreBean.selectAllFilial}">
+							        <p:ajax process="@this" listener="#{consultaDreBean.processarFiliais}" 
+							        	update="listaFiliais" />
+							    </p:selectBooleanCheckbox>
+						        <p:outputLabel value="Seleciona" style="padding-left: 5px"/>
+					        </h:panelGroup>
+						</h:panelGrid>
+												
+					</h:panelGrid>
+				</p:panel>
+			</p:tab>
+		</p:accordionPanel>	
+		
+		<p:toolbar id="botoesToolBar" style="margin-top: 5px; margin-bottom: 9px">
+			<f:facet name="left">
+				<p:commandButton value="Listar" icon="fa fa-cog"
+					actionListener="#{consultaDreBean.listarDRE(2)}"
+					process="@this frm:filtroAccordion:filtroPanelgrid"
+					update="botoesToolBar frm:messages frm:dreTreeTable"
+					oncomplete="configurarMoeda(); PF('filtroAccordionWV').unselect(0)"
+					styleClass="margemBotao"/>
+					
+				<p:commandButton id="excelButton1" value="Planilha Linear" 
+					ajax="true" process="@this"
+					title="Gera planilha de saldos de contas"
+					rendered="#{consultaDreBean.excelGerado}"
+					actionListener="#{consultaDreBean.baixarPlanilhaLinear}" 
+					onclick="PrimeFaces.monitorDownload(start, stop);">
+					
+				     <p:fileDownload value="#{consultaDreBean.file}" />
+		
+				</p:commandButton>
+				
+				<p:commandButton id="excelButton2" value="Planilha Hierárquica" 
+					ajax="true" process="@this"
+					title="Gera planilha de saldos de contas"
+					rendered="#{consultaDreBean.excelGerado}"
+					actionListener="#{consultaDreBean.baixarPlanilhaEstrutura}" 
+					onclick="PrimeFaces.monitorDownload(start, stop);">
+					
+				     <p:fileDownload value="#{consultaDreBean.file}" />
+		
+				</p:commandButton>
+				
+			</f:facet>
+		</p:toolbar>
+		
+		<p:treeTable id="dreTreeTable" value="#{consultaDreBean.root1}" var="elo"
+			rowStyleClass="#{elo.tipo eq 'TOT' ? 'textoNegrito' : ''}"
+			selectionMode="single" selection="#{consultaDreBean.selectedNode}"
+			scrollable="true" scrollHeight="375" scrollWidth="100%"
+			style="font-size: .9em">
+	        
+	        <p:column headerText="Conta" style="width: 350px" styleClass="fundoAzulCinza">
+				<h:outputText value="#{elo.descricao}" title="#{elo.descricao}"/>
+			</p:column>
+			
+			
+			<p:column headerText="Orc.01" style="width: 80px" styleClass="direita">
+				<h:outputText value="#{elo.obtemOrcadoStr(0)}" style="color: #{elo.valorOrcado[0] >= 0 ? 'blue' : 'red'}"/>
+			</p:column>
+
+			<p:column headerText="Rzd.01" style="width: 80px" styleClass="direita">
+				<h:outputText value="#{elo.obtemRealizadoStr(0)}" style="color: #{elo.valorRealizado[0] >= 0 ? 'blue' : 'red'}"/>
+			</p:column>
+			
+			<p:column headerText="Variação" style="width: 50px" styleClass="direita">
+				<h:outputText value="#{elo.obtemPercent(0)}">
+					<f:convertNumber pattern="#,##0"/>
+				</h:outputText>
+				<h:outputText value="%"/>
+			</p:column>
+			
+			
+			<p:column headerText="Orc.02" style="width: 80px" styleClass="direita">
+				<h:outputText value="#{elo.obtemOrcadoStr(1)}" style="color: #{elo.valorOrcado[1] >= 0 ? 'blue' : 'red'}"/>
+			</p:column>
+
+			<p:column headerText="Rzd.02" style="width: 80px" styleClass="direita">
+				<h:outputText value="#{elo.obtemRealizadoStr(1)}" style="color: #{elo.valorRealizado[1] >= 0 ? 'blue' : 'red'}"/>
+			</p:column>
+			
+			<p:column headerText="Variação" style="width: 50px" styleClass="direita">
+				<h:outputText value="#{elo.obtemPercent(1)}">
+					<f:convertNumber pattern="#,##0"/>
+				</h:outputText>
+				<h:outputText value="%"/>
+			</p:column>
+			
+			
+			<p:column headerText="Orc.03" style="width: 80px" styleClass="direita">
+				<h:outputText value="#{elo.obtemOrcadoStr(2)}" style="color: #{elo.valorOrcado[2] >= 0 ? 'blue' : 'red'}"/>
+			</p:column>
+
+			<p:column headerText="Rzd.03" style="width: 80px" styleClass="direita">
+				<h:outputText value="#{elo.obtemRealizadoStr(2)}" style="color: #{elo.valorRealizado[2] >= 0 ? 'blue' : 'red'}"/>
+			</p:column>
+			
+			<p:column headerText="Variação" style="width: 50px" styleClass="direita">
+				<h:outputText value="#{elo.obtemPercent(2)}">
+					<f:convertNumber pattern="#,##0"/>
+				</h:outputText>
+				<h:outputText value="%"/>
+			</p:column>
+			
+			
+			<p:column headerText="Orc.04" style="width: 80px" styleClass="direita">
+				<h:outputText value="#{elo.obtemOrcadoStr(3)}" style="color: #{elo.valorOrcado[3] >= 0 ? 'blue' : 'red'}"/>
+			</p:column>
+
+			<p:column headerText="Rzd.04" style="width: 80px" styleClass="direita">
+				<h:outputText value="#{elo.obtemRealizadoStr(3)}" style="color: #{elo.valorRealizado[3] >= 0 ? 'blue' : 'red'}"/>
+			</p:column>
+			
+			<p:column headerText="Variação" style="width: 50px" styleClass="direita">
+				<h:outputText value="#{elo.obtemPercent(3)}">
+					<f:convertNumber pattern="#,##0"/>
+				</h:outputText>
+				<h:outputText value="%"/>
+			</p:column>
+			
+			
+			<p:column headerText="Orc.05" style="width: 80px" styleClass="direita">
+				<h:outputText value="#{elo.obtemOrcadoStr(4)}" style="color: #{elo.valorOrcado[4] >= 0 ? 'blue' : 'red'}"/>
+			</p:column>
+
+			<p:column headerText="Rzd.05" style="width: 80px" styleClass="direita">
+				<h:outputText value="#{elo.obtemRealizadoStr(4)}" style="color: #{elo.valorRealizado[4] >= 0 ? 'blue' : 'red'}"/>
+			</p:column>
+			
+			<p:column headerText="Variação" style="width: 50px" styleClass="direita">
+				<h:outputText value="#{elo.obtemPercent(4)}">
+					<f:convertNumber pattern="#,##0"/>
+				</h:outputText>
+				<h:outputText value="%"/>
+			</p:column>
+			
+			
+			<p:column headerText="Orc.06" style="width: 80px" styleClass="direita">
+				<h:outputText value="#{elo.obtemOrcadoStr(5)}" style="color: #{elo.valorOrcado[5] >= 0 ? 'blue' : 'red'}"/>
+			</p:column>
+
+			<p:column headerText="Rzd.06" style="width: 80px" styleClass="direita">
+				<h:outputText value="#{elo.obtemRealizadoStr(5)}" style="color: #{elo.valorRealizado[5] >= 0 ? 'blue' : 'red'}"/>
+			</p:column>
+			
+			<p:column headerText="Variação" style="width: 50px" styleClass="direita">
+				<h:outputText value="#{elo.obtemPercent(5)}">
+					<f:convertNumber pattern="#,##0"/>
+				</h:outputText>
+				<h:outputText value="%"/>
+			</p:column>
+			
+			
+			<p:column headerText="Orc.07" style="width: 80px" styleClass="direita">
+				<h:outputText value="#{elo.obtemOrcadoStr(6)}" style="color: #{elo.valorOrcado[6] >= 0 ? 'blue' : 'red'}"/>
+			</p:column>
+
+			<p:column headerText="Rzd.07" style="width: 80px" styleClass="direita">
+				<h:outputText value="#{elo.obtemRealizadoStr(6)}" style="color: #{elo.valorRealizado[6] >= 0 ? 'blue' : 'red'}"/>
+			</p:column>
+			
+			<p:column headerText="Variação" style="width: 50px" styleClass="direita">
+				<h:outputText value="#{elo.obtemPercent(6)}">
+					<f:convertNumber pattern="#,##0"/>
+				</h:outputText>
+				<h:outputText value="%"/>
+			</p:column>
+			
+			
+			<p:column headerText="Orc.08" style="width: 80px" styleClass="direita">
+				<h:outputText value="#{elo.obtemOrcadoStr(7)}" style="color: #{elo.valorOrcado[7] >= 0 ? 'blue' : 'red'}"/>
+			</p:column>
+
+			<p:column headerText="Rzd.08" style="width: 80px" styleClass="direita">
+				<h:outputText value="#{elo.obtemRealizadoStr(7)}" style="color: #{elo.valorRealizado[7] >= 0 ? 'blue' : 'red'}"/>
+			</p:column>
+			
+			<p:column headerText="Variação" style="width: 50px" styleClass="direita">
+				<h:outputText value="#{elo.obtemPercent(7)}">
+					<f:convertNumber pattern="#,##0"/>
+				</h:outputText>
+				<h:outputText value="%"/>
+			</p:column>
+			
+			
+			<p:column headerText="Orc.09" style="width: 80px" styleClass="direita">
+				<h:outputText value="#{elo.obtemOrcadoStr(8)}" style="color: #{elo.valorOrcado[8] >= 0 ? 'blue' : 'red'}"/>
+			</p:column>
+
+			<p:column headerText="Rzd.09" style="width: 80px" styleClass="direita">
+				<h:outputText value="#{elo.obtemRealizadoStr(8)}" style="color: #{elo.valorRealizado[8] >= 0 ? 'blue' : 'red'}"/>
+			</p:column>
+			
+			<p:column headerText="Variação" style="width: 50px" styleClass="direita">
+				<h:outputText value="#{elo.obtemPercent(8)}">
+					<f:convertNumber pattern="#,##0"/>
+				</h:outputText>
+				<h:outputText value="%"/>
+			</p:column>
+			
+			
+			<p:column headerText="Orc.10" style="width: 80px" styleClass="direita">
+				<h:outputText value="#{elo.obtemOrcadoStr(9)}" style="color: #{elo.valorOrcado[9] >= 0 ? 'blue' : 'red'}"/>
+			</p:column>
+
+			<p:column headerText="Rzd.10" style="width: 80px" styleClass="direita">
+				<h:outputText value="#{elo.obtemRealizadoStr(9)}" style="color: #{elo.valorRealizado[9] >= 0 ? 'blue' : 'red'}"/>
+			</p:column>
+			
+			<p:column headerText="Variação" style="width: 50px" styleClass="direita">
+				<h:outputText value="#{elo.obtemPercent(9)}">
+					<f:convertNumber pattern="#,##0"/>
+				</h:outputText>
+				<h:outputText value="%"/>
+			</p:column>
+			
+			
+			<p:column headerText="Orc.11" style="width: 80px" styleClass="direita">
+				<h:outputText value="#{elo.obtemOrcadoStr(10)}" style="color: #{elo.valorOrcado[10] >= 0 ? 'blue' : 'red'}"/>
+			</p:column>
+
+			<p:column headerText="Rzd.11" style="width: 80px" styleClass="direita">
+				<h:outputText value="#{elo.obtemRealizadoStr(10)}" style="color: #{elo.valorRealizado[10] >= 0 ? 'blue' : 'red'}"/>
+			</p:column>
+			
+			<p:column headerText="Variação" style="width: 50px" styleClass="direita">
+				<h:outputText value="#{elo.obtemPercent(10)}">
+					<f:convertNumber pattern="#,##0"/>
+				</h:outputText>
+				<h:outputText value="%"/>
+			</p:column>
+			
+			
+			<p:column headerText="Orc.12" style="width: 80px" styleClass="direita">
+				<h:outputText value="#{elo.obtemOrcadoStr(11)}" style="color: #{elo.valorOrcado[11] >= 0 ? 'blue' : 'red'}"/>
+			</p:column>
+
+			<p:column headerText="Rzd.12" style="width: 80px" styleClass="direita">
+				<h:outputText value="#{elo.obtemRealizadoStr(11)}" style="color: #{elo.valorRealizado[11] >= 0 ? 'blue' : 'red'}"/>
+			</p:column>
+			
+			<p:column headerText="Variação" style="width: 50px" styleClass="direita">
+				<h:outputText value="#{elo.obtemPercent(11)}">
+					<f:convertNumber pattern="#,##0"/>
+				</h:outputText>
+				<h:outputText value="%"/>
+			</p:column>
+			
+			
+			<p:column headerText="Orçado Acumulado" style="width: 80px" styleClass="direita">
+				<h:outputText value="#{elo.valorOrcadoAcum}" style="color: #{elo.valorOrcadoAcum >= 0 ? 'blue' : 'red'}">
+					<f:convertNumber pattern="#,##0"/>
+				</h:outputText>
+				<h:outputText value="%" rendered="#{elo.tipo eq 'PER'}"/>
+			</p:column>
+
+			<p:column headerText="Realizado Acumulado" style="width: 80px" styleClass="direita">
+				<h:outputText value="#{elo.valorRealizadoAcum}" style="color: #{elo.valorRealizadoAcum >= 0 ? 'blue' : 'red'}">
+					<f:convertNumber pattern="#,##0"/>
+				</h:outputText>
+				<h:outputText value="%" rendered="#{elo.tipo eq 'PER'}"/>
+			</p:column>
+
+			<p:column headerText="Variação" style="width: 50px" styleClass="direita">
+				<h:outputText value="#{elo.percentAcum}">
+					<f:convertNumber pattern="#,##0"/>
+				</h:outputText>
+				<h:outputText value="%"/>
+			</p:column>
+			
+	    </p:treeTable>	
+		
+	</h:form>		
+</ui:define>
+
+<ui:define name="rodape">1.0.0</ui:define>
+
+</ui:composition>

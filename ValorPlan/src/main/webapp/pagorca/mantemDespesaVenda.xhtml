@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+ 	xmlns:h="http://xmlns.jcp.org/jsf/html"
+ 	xmlns:f="http://xmlns.jcp.org/jsf/core"
+ 	xmlns:p="http://primefaces.org/ui"
+ 	xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+ 	template="/WEB-INF/templates/Layout.xhtml">
+
+<ui:define name="titulo">Percentuais Default de Deduções de Venda</ui:define>
+
+<ui:define name="conteudo">
+
+<style type="text/css">
+    .ui-row-editor .ui-row-editor-pencil {
+        margin-left:8px;
+    }
+    
+	.bloco1 {
+		height: 430px;
+		overflow-y: auto; 
+	}     
+</style>
+
+	<f:metadata>
+		<f:viewAction action="#{loginBean.validarPermissao('112;')}"/>
+		<f:viewAction action="#{despesaVendaBean.inicializar}" />
+	</f:metadata>
+
+
+	<h:form id="frm">
+		<p:growl id="messages" />
+		
+		<p:commandButton value="Excel" icon="fa fa-file-excel-o" ajax="true" process="@this"
+			title="Gera planilha dos parâmetros informados"
+			actionListener="#{despesaVendaBean.baixarPlanilha}" 
+			onclick="PrimeFaces.monitorDownload(start, stop);">
+			
+		     <p:fileDownload value="#{despesaVendaBean.file}" />
+
+		</p:commandButton>
+		
+		<div class="ui-grid  ui-grid-responsive">
+			<div class="ui-grid-row">
+				<div class="ui-grid-col-2 bloco1">
+				
+					<p:dataTable id="receitaDataTable" widgetVar="receitaDataTableWV" style="width: 90%"
+					    value="#{despesaVendaBean.receitas}" var="item"
+						filteredValue="#{despesaVendaBean.receitasFiltradas}"
+						selectionMode="single" selection="#{despesaVendaBean.receita}" rowKey="#{item.cdReceita}"
+						sortBy="#{item.categoria.dsCategoria}" expandableRowGroups="true">
+						
+						<p:ajax event="rowSelect"
+							listener="#{despesaVendaBean.listarParamDespesas}" 
+							process="@this frm:filtroPG"
+							update="frm:filtroPG frm:paramDespesaToolbar frm:paramDespesaDataTable" 
+							oncomplete="configurarMoeda()"/>
+							
+						<p:ajax event="rowUnselect"
+							listener="#{despesaVendaBean.listarParamDespesas}" 
+							process="@this frm:filtroPG"
+							update="frm:filtroPG frm:paramDespesaToolbar frm:paramDespesaDataTable" 
+							oncomplete="configurarMoeda()"/>
+						
+						<p:headerRow field="categoria.dsCategoria"
+			                         expandable="true">
+			                
+			                <p:column colspan="1">
+			                    <div class="p-d-inline-flex p-ai-center" style="vertical-align: middle">
+			                        <h:outputText styleClass="p-ml-2" value="#{item.categoria.dsCategoria}"/>
+			                    </div>
+			                </p:column>
+			            </p:headerRow>
+			            
+						<p:column headerText="Sigla" filterBy="#{item.sgReceita}" filterMatchMode="contains">
+							<h:outputText value="#{item.sgReceita}" styleClass="textoNegrito"/>
+							<br/>
+							<h:outputText value="#{item.dsReceita}" style="font-size: .7em"/>
+						</p:column>
+							
+					</p:dataTable>
+				</div>
+				
+				<div class="ui-grid-col-10">
+					<ui:include src="/WEB-INF/templates/orcamento/_orcDeducoesVenda.xhtml" />
+				
+				</div>
+			</div>
+		</div>
+		
+		
+	</h:form>		
+</ui:define>
+
+<ui:define name="rodape">1.0.0</ui:define>
+
+</ui:composition>

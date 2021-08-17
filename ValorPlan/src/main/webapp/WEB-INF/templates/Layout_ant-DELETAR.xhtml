@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+ 	xmlns:h="http://xmlns.jcp.org/jsf/html"
+ 	xmlns:f="http://xmlns.jcp.org/jsf/core"
+ 	xmlns:p="http://primefaces.org/ui"
+ 	xmlns:ui="http://xmlns.jcp.org/jsf/facelets">
+<h:head>
+
+	<meta charset="UTF-8" />
+	<title>Contabilinove</title>
+
+	<h:outputStylesheet library="ctbli9" name="styles/estilo.css" />
+	<h:outputScript library="ctbli9" name="javascripts/jquery.maskMoney.js"/>
+	
+	<ui:insert name="cmdScript"/>
+	
+	<style>
+		.ajax-status {
+			width: 35px;
+			height: 35px;
+			position: fixed;
+			right: 10px;
+			top: 5px;
+			z-index: 9999
+		}
+	</style>
+	
+	<script>
+		PrimeFaces.locales['pt'] = {
+		    closeText: 'Fechar',
+		    prevText: 'Anterior',
+		    nextText: 'Próximo',
+		    currentText: 'Começo',
+		    monthNames: ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'],
+		    monthNamesShort: ['Jan','Fev','Mar','Abr','Mai','Jun', 'Jul','Ago','Set','Out','Nov','Dez'],
+		    dayNames: ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'],
+		    dayNamesShort: ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'],
+		    dayNamesMin: ['D','S','T','Q','Q','S','S'],
+		    weekHeader: 'Semana',
+		    firstDay: 0,
+		    isRTL: false,
+		    showMonthAfterYear: false,
+		    yearSuffix: '',
+		    timeOnlyTitle: 'Só Horas',
+		    timeText: 'Tempo',
+		    hourText: 'Hora',
+		    minuteText: 'Minuto',
+		    secondText: 'Segundo',
+		    ampm: false,
+		    month: 'Mês',
+		    week: 'Semana',
+		    day: 'Dia',
+		    allDayText : 'Todo o Dia'
+		};
+	</script>
+		
+</h:head>
+<h:body>
+
+	<p:ajaxStatus styleClass="ajax-status" onsuccess="configurarMoeda()">
+		<f:facet name="start">
+			<h:graphicImage library="ctbli9" name="images/loading.gif"/>
+		</f:facet>
+		<f:facet name="complete">
+			<h:outputText value=""/>
+		</f:facet>
+	</p:ajaxStatus>
+		
+	<header>
+		<div class="cabecalho">
+			<div class="cab-menu">
+				<div style="float: left">
+					<h:outputLink value="/valorplan/home.xhtml">
+						<h:graphicImage library="ctbli9" name="images/logo.png" />
+					</h:outputLink>
+				</div>
+				
+				<div style="float: left; margin-left: 110px; margin-top: 15px;">
+					<h:form style="display: inline-block">
+						<ui:include src="/WEB-INF/templates/_menu.xhtml" />
+					</h:form>
+				</div>
+				
+				
+				<div style="float: left; margin-top: 15px; font-size: 10px;">
+					<h:form style="display: inline-block; vertical-align: middle">
+						<ui:include src="/WEB-INF/templates/_selecionaPlano.xhtml" />
+					</h:form>
+				</div>
+				
+				
+			</div>
+			
+			<div class="cab-usuario">
+				<h:panelGrid columns="2" width="100%" columnClasses="esquerda,direita" style="padding-top: -5px">
+					<h:panelGroup>
+					
+						<h:outputText value="Empresa:" style="font-weight: bold; padding-left: 10px; padding-top: 0px"/>
+						<h:outputText value="#{loginBean.usuarioLogado.contrato.dsEmpresa}"/>
+			
+						<h:outputText value=" " style="padding-right: 20px"/>
+			
+						<h:outputText value="Usuário: " style="font-weight: bold"/>
+						<h:outputText value="#{loginBean.usuarioLogado.nomUsuario}"/>
+			
+					</h:panelGroup>
+					
+					<h:panelGroup>
+						<div style="font-weight: bold; padding-right: 15px">
+							<ui:insert name="titulo" />
+						</div>
+					</h:panelGroup>
+						
+				</h:panelGrid>		
+			</div>
+		</div>		
+	</header>
+		
+	<div id="conteudo" style="margin-top: 85px">
+		<ui:insert name="conteudo" />
+	</div>
+	
+	<footer>
+		ValorFor Versão 1.0.0-BETA - 
+		<h:outputLink value="https://www.contabilinove.com.br/" target="_blank">
+			<h:outputText value="Desenvolvido por ContabilInove" style="color: white"/>
+		</h:outputLink>
+		 - <ui:insert name="rodape" />
+	</footer>
+	
+	<h:form>
+		<p:confirmDialog global="true">
+			<p:commandButton value="Não" icon="fa fa-remove"
+				styleClass="ui-confirmdialog-no" />
+
+			<p:commandButton value="Sim" icon="fa fa-check"
+				styleClass="ui-confirmdialog-yes" />
+		</p:confirmDialog>
+	</h:form>	
+	
+	
+	<script>
+		function configurarMoeda() {
+			$(".moeda").maskMoney({ decimal: ",", thousands: ".", allowZero: true });
+			$(".moeda04").maskMoney({ decimal: ",", thousands: ".", allowZero: true, precision: 4 });
+		}
+		
+		$(document).ready(function() {
+			configurarMoeda();
+		});
+	</script>
+</h:body>
+
+</html>

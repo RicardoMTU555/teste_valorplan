@@ -1,0 +1,98 @@
+/* BASE */
+body {
+	margin: 0;
+	font-size: 12px;
+	font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+/* TABVIEW */
+.ui-tabs .ui-tabs-nav li.ui-tabs-selected a { /* Vou pegando da maior classe pai até o menor elemento filho aninhado nas classes */
+	color: #555;
+}
+
+.ui-panelmenu .ui-panelmenu-header a {
+    color: #fff;
+    text-decoration: none;
+    background-color: #0d0873;
+}
+
+
+@media (max-width: 640px) {                   /* BREAKPOINT até 640 pixels*/
+	.ui-tabs.ui-tabs-top > .ui-tabs-nav li { /* QUANDO TIVER ui-tabs E AO MESMO TEMPO TIVER ui-tabs-top  */
+		width: 100%;                         /*        TENDO ui-tabs-nav COMO FILHO, EM TODOS OS li */  
+	}
+}
+
+/* PANELGRID */
+.ui-panelgrid.panelgrid-noborder .ui-grid-responsive { /* CRIOU UMA CLASSE .panelgrid-noborder PARA USAR EM CONJUNTO COM .ui-panelgrid*/
+	border: none;
+}
+
+@media (max-width: 640px) {
+	.ui-panelgrid.panelgrid-noborder .ui-grid-responsive .ui-grid-row {
+		border: none;
+	}
+}
+
+
+.ui-growl {
+    z-index: 9999 !important;
+    margin-top: 60px;
+}
+
+/* MENU SISTEMA */
+.menu-sistema {
+	border: 0px !important;
+    padding: 0px !important;
+    background: none !important;
+    font-size: 12px;
+}
+
+.menu-sistema .ui-menu-parent > a .ui-menuitem-text {
+    color: #000!important;
+}
+
+.menu-sistema > .ui-menu-list > .ui-menuitem > a > .ui-menuitem-text {
+	color: #ffffff !important;
+}
+
+.menu-sistema .ui-icon {
+    color: #ff8000!important;
+}
+
+.menu-sistema .ui-icon-triangle-1-s {
+    background: url(#{resource['ctbli9:images/seta-para-baixo.png']}) no-repeat;
+}
+/* MENU SISTEMA */
+
+
+/* ***** Customização dos objetos accordion ***** */
+.ui-accordion .ui-accordion-content.ui-widget-content {
+    padding: 9px 0px;
+}
+
+.ui-accordion .ui-accordion-header {
+    background: #5e5ef7;
+    font-stretch: ultra-expanded;
+    color: black;
+    font-weight: bolder;
+}
+/* ***** FIM: Customização dos objetos accordion ***** */
+
+/* ***** Deixa objetos desabilitados um pouco mais visíveis ***** */
+.ui-state-disabled {
+	opacity: .80 !important;
+}
+
+.ui-button {
+	color: #ffffff !important;
+	background: #5e5ef7 !important;
+	font-size: 1.0em !important;
+	font-family: "Helvetica Neue",Helvetica,Arial,sans-serif !important;
+	margin-left: 5px;
+	
+	height: 2.0em;
+	border-width: 0 !important;
+	border-radius: 0 !important;
+	text-shadow: 0 0 black !important;
+}

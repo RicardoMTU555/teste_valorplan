@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+ 	xmlns:h="http://xmlns.jcp.org/jsf/html"
+ 	xmlns:f="http://xmlns.jcp.org/jsf/core"
+ 	xmlns:p="http://primefaces.org/ui"
+ 	xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+ 	template="/WEB-INF/templates/Layout.xhtml">
+
+<ui:define name="titulo">Comparativo Orçado X Realizado - DRE do Mês</ui:define>
+
+<ui:define name="conteudo">
+
+	<f:metadata>
+		<f:viewAction action="#{loginBean.validarPermissao('202;')}"/>
+		<f:viewAction action="#{consultaDreBean.inicializar}"/>
+	</f:metadata>
+
+	<h:form id="frm">
+		<p:messages id="messages" />
+		
+		<p:accordionPanel id="filtroAccordion" widgetVar="filtroAccordionWV">
+			<p:tab title="Filtro DRE - Demonstrativo do Resultado do Exercício">
+				<p:panel>
+					<h:panelGrid id="filtroPanelgrid" style="width:100%; vertical-align: top" columns="2">
+						
+						<h:panelGrid columns="1">
+							<h:outputText value="Nivel Organizacional:" title="Agrupar a partir de qual nível"/>
+							<p:selectOneMenu value="#{consultaDreBean.nivel}" title="Agrupar a partir de qual nível">
+	
+								<f:selectItems value="#{consultaDreBean.listaNiveisDepto}" var="niv"
+									itemValue="#{niv}" itemLabel="#{niv}" />
+							</p:selectOneMenu>
+							
+							<h:outputText value="Período Orçamento:"/>
+							<p:selectOneMenu id="mesOrc" value="#{consultaDreBean.anoMes.mes}"
+								style="vertical-align: middle;">
+								<f:selectItems value="#{consultaDreBean.anoMes.meses}"/>
+							</p:selectOneMenu>
+							
+							<h:outputText value="Ano:" />
+							<h:outputText id="anoOrc" value="#{consultaDreBean.anoMes.ano}" 
+								styleClass="textoNegrito"/>
+								
+							<h:outputText value="Agrupar por:" />
+							<p:selectOneRadio id="agruparPor" value="#{consultaDreBean.agrupaConta}" unselectable="true">
+					            <f:selectItem itemLabel="Conta Contábil" itemValue="true" />
+					            <f:selectItem itemLabel="Centro de Custo" itemValue="false" />
+					            	
+							</p:selectOneRadio>
+
+							
+						</h:panelGrid>
+
+						<h:panelGrid columns="1">
+							<p:outputLabel value="Filiais:" />
+							<p:selectManyMenu id="listaFiliais" value="#{consultaDreBean.filiaisSelecionadas}"
+								filter="true" filterMatchMode="contains" showCheckbox="true"
+					        	style="width: 170px" scrollHeight="125">
+					            
+								<f:selectItems value="#{consultaDreBean.filiais}" var="item"
+									itemValue="#{item.cdFilial}" itemLabel="#{item.sgFilial}" />
+									
+					        </p:selectManyMenu>
+							<h:panelGroup>
+						        <p:selectBooleanCheckbox value="#{consultaDreBean.selectAllFilial}">
+							        <p:ajax process="@this" listener="#{consultaDreBean.processarFiliais}" 
+							        	update="listaFiliais" />
+							    </p:selectBooleanCheckbox>
+						        <p:outputLabel value="Seleciona" style="padding-left: 5px"/>
+					        </h:panelGroup>
+						</h:panelGrid>
+						
+					</h:panelGrid>
+				</p:panel>
+			</p:tab>
+		</p:accordionPanel>
+		
+		<p:toolbar id="botoesToolBar" style="margin-top: 5px; margin-bottom: 9px">
+			<f:facet name="left">
+				<p:commandButton value="Listar" 
+					actionListener="#{consultaDreBean.listarDRE(1)}"
+					process="@this frm:filtroAccordion:filtroPanelgrid"
+					update="botoesToolBar frm:messages frm:dreTreeTable"
+					oncomplete="configurarMoeda(); PF('filtroAccordionWV').unselect(0)"
+					styleClass="margemBotao"/>
+					
+				<p:commandButton id="excelButton1" value="Planilha Linear" 
+					ajax="true" process="@this"
+					title="Gera planilha de saldos de contas"
+					rendered="#{consultaDreBean.excelGerado}"
+					actionListener="#{consultaDreBean.baixarPlanilhaLinear}" 
+					onclick="PrimeFaces.monitorDownload(start, stop);">
+					
+				     <p:fileDownload value="#{consultaDreBean.file}" />
+		
+				</p:commandButton>
+				
+				<p:commandButton id="excelButton2" value="Planilha Hierárquica" 
+					ajax="true" process="@this"
+					title="Gera planilha de saldos de contas"
+					rendered="#{consultaDreBean.excelGerado}"
+					actionListener="#{consultaDreBean.baixarPlanilhaEstrutura}" 
+					onclick="PrimeFaces.monitorDownload(start, stop);">
+					
+				     <p:fileDownload value="#{consultaDreBean.file}" />
+		
+				</p:commandButton>
+			</f:facet>
+		</p:toolbar>		
+		
+		<p:treeTable id="dreTreeTable" value="#{consultaDreBean.root1}" var="elo"
+			rowStyleClass="#{elo.tipo eq 'TOT' ? 'textoNegrito' : ''}"
+			selectionMode="single" selection="#{consultaDreBean.selectedNode}">
+	        
+	        <p:column headerText="Conta" style="width:35%" styleClass="fundoAzulCinza">
+				<h:outputText value="#{elo.descricao}"/>
+			</p:column>
+			
+			<p:column headerText="Orçado" style="width:10%" styleClass="direita">
+				<h:outputText value="#{elo.valorOrcado[consultaDreBean.posicaoMes]}" 
+					style="color: #{elo.valorOrcado[consultaDreBean.posicaoMes] >= 0 ? 'blue' : 'red'}">
+					<f:convertNumber pattern="#,##0.00"/>
+				</h:outputText>
+				<h:outputText value="%" rendered="#{elo.tipo eq 'PER'}"/>
+			</p:column>
+
+			<p:column headerText="Realizado" style="width:10%" styleClass="direita">
+				<h:outputText value="#{elo.valorRealizado[consultaDreBean.posicaoMes]}" 
+					style="color: #{elo.valorRealizado[consultaDreBean.posicaoMes] >= 0 ? 'blue' : 'red'}">
+					<f:convertNumber pattern="#,##0.00"/>
+				</h:outputText>
+				<h:outputText value="%" rendered="#{elo.tipo eq 'PER'}"/>
+			</p:column>
+
+			<p:column headerText="Variação" style="width:5%" styleClass="direita">
+				<h:outputText value="#{elo.obtemPercent(consultaDreBean.posicaoMes)}">
+					<f:convertNumber pattern="#,##0.00"/>
+				</h:outputText>
+				<h:outputText value="%"/>
+			</p:column>
+			
+			<p:column headerText="Orçado Acumulado" style="width:10%" styleClass="direita">
+				<h:outputText value="#{elo.valorOrcadoAcum}" style="color: #{elo.valorOrcadoAcum >= 0 ? 'blue' : 'red'}">
+					<f:convertNumber pattern="#,##0.00"/>
+				</h:outputText>
+				<h:outputText value="%" rendered="#{elo.tipo eq 'PER'}"/>
+			</p:column>
+
+			<p:column headerText="Realizado Acumulado" style="width:10%" styleClass="direita">
+				<h:outputText value="#{elo.valorRealizadoAcum}" style="color: #{elo.valorRealizadoAcum >= 0 ? 'blue' : 'red'}">
+					<f:convertNumber pattern="#,##0.00"/>
+				</h:outputText>
+				<h:outputText value="%" rendered="#{elo.tipo eq 'PER'}"/>
+			</p:column>
+
+			<p:column headerText="Variação" style="width:5%" styleClass="direita">
+				<h:outputText value="#{elo.percentAcum}">
+					<f:convertNumber pattern="#,##0.00"/>
+				</h:outputText>
+				<h:outputText value="%"/>
+			</p:column>
+	    </p:treeTable>	
+		
+	</h:form>		
+</ui:define>
+
+<ui:define name="rodape">1.0.0</ui:define>
+
+</ui:composition>

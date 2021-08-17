@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+ 	xmlns:h="http://xmlns.jcp.org/jsf/html"
+ 	xmlns:f="http://xmlns.jcp.org/jsf/core"
+ 	xmlns:p="http://primefaces.org/ui"
+ 	xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+ 	template="/WEB-INF/templates/Layout.xhtml">
+
+<ui:define name="titulo">Recompor Saldos Contábeis</ui:define>
+
+<ui:define name="conteudo">
+
+	<f:metadata>
+		<f:viewAction action="#{loginBean.validarPermissao('303;')}"/>
+		<f:viewAction action="#{consultaDreBean.habilitarDownload}"/>
+		
+	</f:metadata>
+
+	<h:form id="frm">
+		<p:ajaxStatus onstart="$('input').css('background-color', 'yellow')"
+			oncomplete="$('input').css('background-color', '')" />
+		
+	
+		<p:messages id="messages" />
+
+		<br/>
+		<p:commandButton value="Recompor" icon="fa fa-cog"
+			actionListener="#{consultaDreBean.recomporSaldo}"
+			process="@this"
+			update="frm:messages"
+			oncomplete="configurarMoeda()"
+			style="margin-right: 5px">
+			
+			<p:ajaxStatus onstart="PF('statusDialog').show()" onsuccess="PF('statusDialog').hide()" />
+		</p:commandButton>
+
+		
+		<p:commandButton value="Carrega Receitas" icon="fa fa-cog"
+			actionListener="#{procAvulsoBean.carregarReceitas}"
+			process="@this"
+			update="frm:messages"
+			style="margin-right: 5px">
+			
+			<p:ajaxStatus onstart="PF('statusDialog').show()" onsuccess="PF('statusDialog').hide()" />
+		</p:commandButton>		
+		
+		<p:dialog widgetVar="statusDialog" modal="true" draggable="false" closable="false" resizable="false" showHeader="false">
+            <h2>Aguarde... Processando recomposição.</h2>
+		</p:dialog>	
+	</h:form>		
+</ui:define>
+
+<ui:define name="rodape">1.0.0</ui:define>
+
+</ui:composition>

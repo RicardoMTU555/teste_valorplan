@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+ 	xmlns:h="http://xmlns.jcp.org/jsf/html"
+ 	xmlns:f="http://xmlns.jcp.org/jsf/core"
+ 	xmlns:p="http://primefaces.org/ui"
+ 	xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+ 	template="WEB-INF/templates/Layout.xhtml">
+
+<ui:define name="cmdScript">
+	<script>
+		function ext() {
+			this.cfg.axes.yaxis.tickOptions.formatString = "%'#.0f";
+            $.jqplot.sprintf.thousandsSeparator = '.';
+            $.jqplot.sprintf.decimalMark = ',';             
+		}
+		
+		function ajustarGrafico($jqplot) {
+		   this.cfg.axes = {
+		       yaxis:
+		       {
+		           tickInterval: 20,
+		           tickOptions: { 
+		               formatString: "%'.2f" 
+		           } 
+		       }
+		   };
+		  
+		}
+	</script>
+</ui:define>
+
+<ui:define name="titulo">Início</ui:define>
+
+<ui:define name="conteudo">
+
+<style type="text/css">
+	.ui-state-disabled {
+		opacity: .80 !important;
+		color: blue;
+	}
+</style> 
+	 
+	<f:metadata>
+		<f:viewAction action="#{loginBean.validarPermissao(';0;')}" />
+	</f:metadata>
+
+	 
+	<h:form id="frmHome">
+		<p:growl id="messages" showSummary="true" showDetail="true"/>
+		
+		<p:tabView style="margin-top: 3px" id="graficosTabView">
+			<p:tab title="Receitas">
+			
+				<div class="card">
+					<p:barChart model="#{homeBean.receitasChart}" style="width:100%; height:400px;"
+						rendered="#{homeBean.receitasChart ne null}"/>				
+				</div>
+				
+				<div class="card">
+					<h3>Acumulado no ano</h3>
+				    <p:pieChart model="#{homeBean.acumReceitaPie}" style="width: 100%; height: 300px;"
+				    	rendered="#{homeBean.acumReceitaPie ne null}"/>
+				</div>
+
+			</p:tab>
+			<p:tab title="Deduções">
+				<h:panelGrid id="deducoesPanelGrid" width="100%">
+					<p:toolbar>
+						<p:toolbarGroup align="left">
+				
+							<p:outputLabel value="Ano Orçamento:"/>
+					
+							<h:outputText value="#{homeBean.mesRef.ano}"
+								styleClass="textoNegrito"
+								style="margin-left: 5px; margin-right: 10px"/>
+								
+							<h:outputText value="Mês" style="padding-right: 5px"/>
+							
+							<p:commandButton title="Anterior" icon="fa fa-caret-square-o-left"
+								actionListener="#{homeBean.mesAnterior}" 
+								update="frmHome:graficosTabView:deducoesPanelGrid" 
+								process="@this @parent"/>
+							
+							<p:selectOneMenu value="#{homeBean.mesRef.mes}" style="vertical-align: middle">
+								<f:selectItems value="#{homeBean.mesRef.meses}"/>
+								
+								<p:ajax event="change" 
+									process="@this @parent"
+									update="frmHome:graficosTabView:deducoesPanelGrid" 
+									listener="#{homeBean.montarGraficosMes}"
+									oncomplete="configurarMoeda()"/>
+							</p:selectOneMenu>
+			
+							<p:commandButton title="Próximo" icon="fa fa-caret-square-o-right"
+								actionListener="#{homeBean.mesPosterior}"  
+								process="@this @parent"
+								update="frmHome:graficosTabView:deducoesPanelGrid"/>
+						</p:toolbarGroup>
+					</p:toolbar>
+					
+					<div class="card">
+						<p:barChart model="#{homeBean.recDedChart}" style="width:100%; height:370px;"
+							rendered="#{homeBean.recDedChart ne null}"/>				
+					</div>
+				
+				</h:panelGrid>
+					
+			</p:tab>
+			<p:tab title="Despesas">
+			
+				<p:lineChart model="#{homeBean.despesaGeralLine}" style="width:90%; padding-left: 10px; height:300px;"
+					rendered="#{homeBean.despesaGeralLine ne null}"/>
+					
+				<p:lineChart model="#{homeBean.despesaRHLine}" style="width:90%; padding-left: 10px; height:300px;"
+					rendered="#{homeBean.despesaRHLine ne null}"/>
+					
+			</p:tab>
+			
+			<p:tab title="Resultado">
+				<div class="ui-grid  ui-grid-responsive">
+					<div class="ui-grid-row">
+						
+						<div class="ui-grid-col-9">
+    
+    						<h:panelGrid id="resultadoPanelGrid" width="100%">
+								<p:toolbar>
+									<p:toolbarGroup align="left">
+							
+										<p:outputLabel value="Ano Orçamento:"/>
+								
+										<h:outputText value="#{homeBean.mesRef.ano}"
+											styleClass="textoNegrito"
+											style="margin-left: 5px; margin-right: 10px"/>
+											
+										<h:outputText value="Mês" style="padding-right: 5px"/>
+										
+										<p:commandButton title="Anterior" icon="fa fa-caret-square-o-left"
+											actionListener="#{homeBean.mesAnterior}" 
+											update="frmHome:graficosTabView:resultadoPanelGrid frmHome:graficosTabView:resultadoPercentualPanelGrid" 
+											process="@this @parent"/>
+										
+										<p:selectOneMenu value="#{homeBean.mesRef.mes}" style="vertical-align: middle">
+											<f:selectItems value="#{homeBean.mesRef.meses}"/>
+											
+											<p:ajax event="change" 
+												process="@this @parent"
+												update="frmHome:graficosTabView:resultadoPanelGrid frmHome:graficosTabView:resultadoPercentualPanelGrid" 
+												listener="#{homeBean.montarGraficosMes}"
+												oncomplete="configurarMoeda()"/>
+										</p:selectOneMenu>
+						
+										<p:commandButton title="Próximo" icon="fa fa-caret-square-o-right"
+											actionListener="#{homeBean.mesPosterior}"  
+											process="@this @parent"
+											update="frmHome:graficosTabView:resultadoPanelGrid frmHome:graficosTabView:resultadoPercentualPanelGrid"/>
+									</p:toolbarGroup>
+								</p:toolbar>
+							
+								<p:barChart model="#{homeBean.resultadoChart}" style="width:100%; height:400px;"
+									rendered="#{homeBean.resultadoChart ne null}"/>				
+							
+							</h:panelGrid>
+							
+						</div>
+						
+						<div class="ui-grid-col-3">
+    						<h:panelGrid id="resultadoPercentualPanelGrid" styleClass="central">
+								<p:pieChart model="#{homeBean.percResultadoPie}" style="width: 100%; height: 300px;"
+							    	rendered="#{homeBean.percResultadoPie ne null}"/>
+							</h:panelGrid>
+											
+						</div>
+						
+					</div>
+				</div>
+									
+			</p:tab>
+		</p:tabView>
+	</h:form>		
+</ui:define>
+
+<ui:define name="rodape">1.0.0</ui:define>
+
+</ui:composition>

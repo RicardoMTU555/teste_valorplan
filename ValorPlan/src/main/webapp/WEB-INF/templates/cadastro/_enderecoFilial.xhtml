@@ -1,0 +1,132 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+    xmlns:h="http://java.sun.com/jsf/html"
+    xmlns:f="http://java.sun.com/jsf/core"
+    xmlns:ui="http://java.sun.com/jsf/facelets"
+    xmlns:p="http://primefaces.org/ui">
+
+
+	<p:panelGrid id="endFilialPanelGrid" columns="2" style="width: 100%"
+		rendered="#{filialBean.filial ne null}">
+	
+			<h:panelGrid columns="1">
+			
+				<p:dataTable id="enderecoDataTable" value="#{filialBean.filial.enderecos}" var="item" 
+					selectionMode="single" selection="#{filialBean.endereco}" rowKey="#{item.sqEndFilial}"
+					style="width: 500px">
+					
+					<p:ajax event="rowSelect" listener="#{cotacaoBean.reinicializa}" update="frm:enderecoPanelGrid" />
+					<p:ajax event="rowUnselect" listener="#{cotacaoBean.reinicializa}" update="frm:enderecoPanelGrid" />
+							
+					<p:column headerText="Endereço">
+						<h:outputText value="#{item.nmLogradouro}"/>
+					</p:column>
+					
+				</p:dataTable>
+  			</h:panelGrid>
+  			
+  			
+			<h:panelGrid id="enderecoPanelGrid" columns="2" columnClasses="colEsquerdaFixo,colunaDireita">
+				
+				<p:outputLabel value="Destino:" for="tipoEndereco"/>
+				<p:selectOneMenu id="tipoEndereco" value="#{filialBean.endereco.tipo}">
+					<f:selectItems value="#{filialBean.tiposEndereco}" var="tip" 
+						itemValue="#{tip}" itemLabel="#{tip.descricao}"/>
+				</p:selectOneMenu>
+				
+				<h:outputText/>
+				<h:outputText/>
+						
+				<p:outputLabel value="Identificação" for="tpLogradouro"/>
+				<p:inputText id="tpLogradouro" value="#{filialBean.endereco.tpLogradouro}" 
+					size="5" maxlength="5"/>
+						
+				<p:outputLabel value="Logradouro:" for="nmLogradouro"/>
+				<p:inputText id="nmLogradouro" value="#{filialBean.endereco.nmLogradouro}" 
+					size="60" maxlength="60"/>
+						
+				<p:outputLabel value="Numero:" for="nrLogradouro"/>
+				<p:inputText id="nrLogradouro" value="#{filialBean.endereco.nrLogradouro}" 
+					size="5" maxlength="5"/>
+						
+				<p:outputLabel value="CEP" for="nrCEP"/>
+				<p:inputMask id="nrCEP" value="#{filialBean.endereco.nrCEP}" 
+					mask="99999999" size="8" />
+						
+				<p:outputLabel value="UF:" for="uf"/>
+				<p:selectOneMenu id="uf" value="#{filialBean.uf}"
+					filter="true" filterMatchMode="startsWith">
+				
+					<f:selectItem itemLabel="Selecione..."/>
+					<f:selectItems value="#{filialBean.estadosBrasileiros}" var="uf" 
+						itemValue="#{uf}" itemLabel="#{uf.descricao}"/>
+						
+						<p:ajax event="change" update="cidadeUF" listener="#{filialBean.listarCidadesUF}"/>
+				</p:selectOneMenu>
+						
+				<p:outputLabel value="Cidade:" for="cidadeUF"/>
+				<p:selectOneMenu id="cidadeUF" value="#{filialBean.cidade.cdCidade}">
+					<f:selectItem itemLabel="Selecione..."/>
+					<f:selectItems value="#{filialBean.cidadesUF}" var="cid" 
+						itemValue="#{cid.cdCidade}" itemLabel="#{cid.nmCidade}"/>
+						
+					<p:ajax event="change" update="bairroCidade" listener="#{filialBean.listarBairrosCidade}"/>	
+				</p:selectOneMenu>
+						
+				<p:outputLabel value="Bairro:" for="bairroCidade"/>
+				<p:selectOneMenu id="bairroCidade" value="#{filialBean.endereco.bairro.cdBairro}">
+					<f:selectItem itemLabel="Selecione..."/>
+					<f:selectItems value="#{filialBean.bairrosCidade}" var="bai" 
+						itemValue="#{bai.cdBairro}" itemLabel="#{bai.nmBairro}"/>
+				</p:selectOneMenu>
+				
+				<h:outputText/>
+
+				<h:panelGroup>
+					<p:selectBooleanCheckbox id="ckAtivo" value="#{filialBean.endereco.idAtivo}" />
+					<p:outputLabel value="Ativo" style="padding-left: 3px; padding-right: 5px"/>
+
+					<p:selectBooleanCheckbox id="ckPrincipal" value="#{filialBean.endereco.idPrincipal}" />
+					<p:outputLabel value="Principal" style="padding-left: 3px; padding-right: 5px"/>
+				</h:panelGroup>
+
+				<h:outputText/>
+				<h:outputText/>
+				<h:outputText/>
+				<h:outputText/>
+
+				<p:outputLabel value="Vendedor" for="nmVendedor"/>
+				<p:inputText id="nmVendedor" value="#{filialBean.endereco.nmContato}" 
+					size="60" maxlength="60"/>
+
+				<p:outputLabel value="Telefone" for="txTelefone"/>
+				<h:panelGroup>
+					<p:inputMask id="txTelefone" value="#{filialBean.endereco.tlFixo}"
+						mask="(99) 9999-9999" size="14"/>
+					<p:outputLabel value="Ramal" for="nrRamal" style="padding-left: 20px; padding-right: 5px"/>
+					<p:inputMask id="nrRamal" value="#{filialBean.endereco.nrRamal}"
+						mask="9999" size="4"/>
+				</h:panelGroup>
+
+				<p:outputLabel value="Celular" for="txCelular"/>
+				<p:inputMask id="txCelular" value="#{filialBean.endereco.tlCelular}"
+					mask="(99) 99999-9999" size="15"/>
+
+				<p:outputLabel value="Fax" for="txFax"/>
+				<p:inputMask id="txFax" value="#{filialBean.endereco.tlFax}"
+						mask="(99) 9999-9999" size="14"/>
+
+			
+				<p:outputLabel value="E-Mail Contato:" for="txEmailContato"/>
+				<p:inputText id="txEmailContato" value="#{filialBean.endereco.txEmailContato}"
+					size="90" maxlength="90"/>
+				
+				<h:outputText/>
+				
+				<p:commandButton id="salvarEndCommandButton" value="Salvar" actionListener="#{filialBean.salvarEndereco}"
+					update="enderecoPanelGrid endFilMessages"
+					oncomplete="if (!args.validationFailed) PF('endFilDialogWidgetVar').hide()" process="frm:endFilDialog"/>
+				
+			</h:panelGrid>
+			
+  	</p:panelGrid>		
+</ui:composition>

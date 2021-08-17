@@ -1,0 +1,92 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+    xmlns:h="http://java.sun.com/jsf/html"
+    xmlns:f="http://java.sun.com/jsf/core"
+    xmlns:ui="http://java.sun.com/jsf/facelets"
+    xmlns:p="http://primefaces.org/ui">
+
+		<p:submenu label="Cadastros" icon="fa fa-file">
+            <p:submenu label="Tabelas Básicas">
+                <p:menuitem value="Plano Orçamentário" action="#{menuBean.direciona('/pagcdst/cadPlano')}" disabled="#{loginBean.bloquearAcesso('20;')}"/>
+                <p:separator/>
+                <p:menuitem rendered="false" value="Parâmetros Filial" action="#{menuBean.direciona('/pagcdst/parametroFilial')}" disabled="#{loginBean.bloquearAcesso('1;')}"/>
+                <p:menuitem rendered="false" value="Cidade" action="#{menuBean.direciona('/pagcdst/cadCidade')}" disabled="#{loginBean.bloquearAcesso('3;')}"/>
+            </p:submenu>
+            <p:submenu label="Empresa">
+                <p:menuitem value="Filial" action="#{menuBean.direciona('/pagcdst/cadFilial')}" disabled="#{loginBean.bloquearAcesso('4;')}"/>
+                <p:menuitem value="Departamento" action="#{menuBean.direciona('/pagcdst/cadDepartamento')}" disabled="#{loginBean.bloquearAcesso('5;')}"/>
+            	<p:menuitem value="Centro de custo" action="#{menuBean.direciona('/pagcdst/cadCentroCusto')}" disabled="#{loginBean.bloquearAcesso('6;')}" />
+            </p:submenu>
+            <p:submenu label="Pessoal">
+                <p:menuitem value="Cargo" action="#{menuBean.direciona('/pagcdst/cadCargo')}" disabled="#{loginBean.bloquearAcesso('8;')}"/>
+                <p:menuitem value="Funcionário" action="#{menuBean.direciona('/pagcdst/cadFuncionario')}" disabled="#{loginBean.bloquearAcesso('9;')}"/>
+            </p:submenu>
+
+            <p:submenu label="Contabilidade">
+                <p:menuitem value="DRE" action="#{menuBean.direciona('/pagcdst/cadClassificacaoCtb')}" disabled="#{loginBean.bloquearAcesso('10;')}" />
+                <p:menuitem value="Plano de Contas" action="#{menuBean.direciona('/pagcdst/cadPlaCon')}" disabled="#{loginBean.bloquearAcesso('11;')}"/>
+                <p:menuitem value="Estorno de Contas" action="#{menuBean.direciona('/pagcdst/cadEstornoConta')}" disabled="#{loginBean.bloquearAcesso('14;')}"/>
+            </p:submenu>
+
+            <p:submenu label="Operacional">
+				<p:menuitem value="Receitas" action="#{menuBean.direciona('/pagcdst/cadReceita')}" disabled="#{loginBean.bloquearAcesso('13;')}"/>
+				<p:menuitem value="Imobilizado" action="#{menuBean.direciona('/pagcdst/cadCategoriaImobilizado')}" disabled="#{loginBean.bloquearAcesso('12;')}"/>
+            </p:submenu>
+        </p:submenu>
+  
+        <p:submenu label="Orçamento" icon="fa fa-calculator">
+            <p:submenu label="Parâmetros">
+                <p:menuitem value="Equipes" action="#{menuBean.direciona('/pagorca/mantemEquipes')}" disabled="#{loginBean.bloquearAcesso('114;')}"/>
+                <p:menuitem value="Deduções de Vendas" action="#{menuBean.direciona('/pagorca/mantemDespesaVenda')}" disabled="#{loginBean.bloquearAcesso('112;')}"/>
+                <p:menuitem value="Despesas de Folha/RH" action="#{menuBean.direciona('/pagorca/mantemDespesaRH')}" disabled="#{loginBean.bloquearAcesso('113;')}"/>
+            </p:submenu>
+            <p:submenu label="Lançamentos">
+                <p:menuitem value="Receitas" action="#{menuBean.direciona('/pagorca/lancReceita')}" disabled="#{loginBean.bloquearAcesso('130;')}"/>
+                <p:menuitem value="Despesas Gerais" action="#{menuBean.direciona('/pagorca/lancDespesaGeral')}" disabled="#{loginBean.bloquearAcesso('131;')}"/>
+	            <p:menuitem value="Despesas RH" action="#{menuBean.direciona('/pagorca/lancDespesaRH')}" disabled="#{loginBean.bloquearAcesso('132;')}"/>
+	            <p:menuitem rendered="false" value="Investimentos" action="#{menuBean.direciona('/pagorca/lancInvestimento')}" disabled="#{loginBean.bloquearAcesso('133;')}"/>
+            </p:submenu>
+            <p:submenu label="Monitoramento">
+                <p:menuitem value="Vendas" action="#{menuBean.direciona('/pagorca/orcReceita')}" disabled="#{loginBean.bloquearAcesso('150;')}"/>
+                <p:menuitem value="Contas" action="#{menuBean.direciona('/pagorca/orcDespesa')}" disabled="#{loginBean.bloquearAcesso('151;')}"/>
+            	<p:menuitem value="Receitas X Deduções" action="#{menuBean.direciona('/pagcons/consultaReceitaDeducao')}" disabled="#{loginBean.bloquearAcesso(';0;')}"/>
+            	<p:menuitem value="Quantidade Receitas" action="#{menuBean.direciona('/pagcons/consultaQuantidade')}" disabled="#{loginBean.bloquearAcesso(';0;')}"/>
+            </p:submenu>
+        </p:submenu>
+ 
+        <p:submenu label="Acompanhamento" icon="fa fa-search">
+            <p:submenu label="DRE">
+            	<p:menuitem value="Mensal Multiníveis" action="#{menuBean.direciona('/pagcons/consultaDREMensal')}" disabled="#{loginBean.bloquearAcesso('202;')}"/>
+            	<p:menuitem value="Anual Multiníveis" action="#{menuBean.direciona('/pagcons/consultaDREAnual')}" disabled="#{loginBean.bloquearAcesso('201;')}"/>
+            	<p:menuitem value="Mensal Simples" action="#{menuBean.direciona('/pagcons/consultaDREMensalFiltro')}" disabled="#{loginBean.bloquearAcesso('204;')}"/>
+            	<p:menuitem value="Anual Simples" action="#{menuBean.direciona('/pagcons/consultaDREAnualFiltro')}" disabled="#{loginBean.bloquearAcesso('203;')}"/>
+            </p:submenu>
+            <p:submenu label="Comercial">
+            	<p:menuitem value="Painel" action="#{menuBean.direciona('/pagcons/consultaPainel')}" disabled="#{loginBean.bloquearAcesso(';0;')}"/>
+            	<p:menuitem value="Evolução Meses" action="#{menuBean.direciona('/pagcons/consultaEvolucaoMeses')}" disabled="#{loginBean.bloquearAcesso(';0;')}"/>
+            	<p:menuitem value="Evolução Anos" action="#{menuBean.direciona('/pagcons/consultaEvolucaoAnos')}" disabled="#{loginBean.bloquearAcesso(';0;')}"/>
+            </p:submenu>
+            <p:submenu label="Consolidado">
+            	<p:menuitem value="Evolução Meses" action="#{menuBean.direciona('/pagcons/consultaEvolucaoMesesConsolidado')}" disabled="#{loginBean.bloquearAcesso(';0;')}"/>
+            	<p:menuitem value="Evolução Anos" action="#{menuBean.direciona('/pagcons/consultaEvolucaoAnosConsolidado')}" disabled="#{loginBean.bloquearAcesso(';0;')}"/>
+            	<p:menuitem value="Comparativo Anos" action="#{menuBean.direciona('/pagcons/consultaComparativoAnos')}" disabled="#{loginBean.bloquearAcesso(';0;')}"/>
+            </p:submenu>
+        </p:submenu>
+ 
+        <p:submenu label="Integrações" icon="fa fa-exchange">
+            <p:menuitem value="Enviar Arquivos" action="#{menuBean.direciona('/pagproc/enviaArquivo')}" disabled="#{loginBean.bloquearAcesso('301;')}"/>
+            <p:menuitem value="Importar Arquivos" action="#{menuBean.direciona('/pagproc/importador')}" disabled="#{loginBean.bloquearAcesso('302;')}"/>
+            <p:menuitem rendered="#{loginBean.administrador}" value="Recompor Saldos" action="#{menuBean.direciona('/pagproc/recompoeSaldo')}" disabled="#{loginBean.bloquearAcesso('303;')}"/>
+        </p:submenu>
+ 
+        <p:submenu label="Ajuda" icon="fa fa-question">
+	        <p:menuitem value="Manual" icon="fa fa-book" 
+    	    	url="http://contabilinove.com.br.s3-website-us-east-1.amazonaws.com/pdf/ValorPlan-Manual_do_Usuario.pdf" target="_blank"/>
+            <p:menuitem value="Usuários Logados" action="#{menuBean.direciona('/pagadmn/adminUsu')}" 
+            	rendered="#{loginBean.administrador}"/>
+            <p:menuitem value="Migração de Versão" action="#{menuBean.direciona('/pagadmn/migrarBancoVersao')}" 
+            	rendered="#{loginBean.administrador}"/>
+		</p:submenu>
+
+        <p:menuitem value="Logout" actionListener="#{loginBean.logout}" icon="fa fa-sign-out" />
+  	
+</ui:composition>

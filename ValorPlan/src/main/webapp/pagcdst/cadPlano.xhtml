@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://xmlns.jcp.org/jsf/html"
+	xmlns:f="http://xmlns.jcp.org/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+	template="/WEB-INF/templates/Layout.xhtml">
+
+	<ui:define name="titulo">Cadastro de Planos Orçamentários</ui:define>
+
+	<ui:define name="conteudo">
+
+		<f:metadata>
+			<f:viewAction action="#{loginBean.validarPermissao('20;')}" />
+		</f:metadata>
+
+		<h:form id="frm">
+			<p:messages id="messages" />
+			
+			<p:toolbar id="cadToolbar">
+				<f:facet name="left">
+					<p:inputText id="termoPesquisa"
+						placeholder="Digite parte da descrição" size="20"
+						value="#{planoBean.termoPesquisa}" />
+
+					<p:commandButton value="Pesquisar" icon="fa fa-search"
+						actionListener="#{planoBean.listar}"
+						update="cadDataTable messages" process="@this termoPesquisa" />
+
+					<span class="ui-separator"> <span
+						class="ui-icon ui-icon-grip-dotted-vertical" />
+					</span>
+
+					<p:commandButton value="Novo" icon="fa fa-plus"
+						title="Inclui novo cenário"
+						actionListener="#{planoBean.inicializarRegistro}"
+						oncomplete="PF('cadDialogWidgetVar').show()"
+						update="cadDialog" process="@this">
+						<p:resetInput target="cadDialog" />
+					</p:commandButton>
+
+					<span class="ui-separator"> <span
+						class="ui-icon ui-icon-grip-dotted-vertical" />
+					</span>
+
+					<p:commandButton value="Editar" icon="fa fa-edit"
+						title="Altera o registro selecionado"
+						actionListener="#{planoBean.prepararAlteracao}"
+						disabled="#{not planoBean.itemSelecionado}"
+						oncomplete="PF('cadDialogWidgetVar').show()"
+						update="cadDialog" process="@this">
+						<p:resetInput target="cadDialog" />
+					</p:commandButton>
+
+					<p:commandButton value="Excluir" icon="fa fa-trash"
+						title="Exclui o registro selecionado"
+						disabled="#{not planoBean.itemSelecionado}"
+						actionListener="#{planoBean.excluir}"
+						update="messages cadDataTable cadToolbar" process="@this">
+						<p:confirm icon="ui-icon-alert" header="Confirmação de Exclusão"
+							message="Posso Excluir o cargo?" />
+					</p:commandButton>
+
+					<span class="ui-separator"> <span
+						class="ui-icon ui-icon-grip-dotted-vertical" />
+					</span>
+
+					<p:commandButton value="Importar" icon="fa fa-edit"
+						title="Importa dados de outro cenário para o cenário selecionado"
+						disabled="#{not planoBean.itemSelecionado}"
+						actionListener="#{planoBean.prepararValidacao}"
+						oncomplete="PF('importarDialogWidgetVar').show()"
+						update="importarDialog" process="@this">
+						<p:resetInput target="importarDialog" />
+					</p:commandButton>
+
+				</f:facet>
+			</p:toolbar>
+			
+			<p:spacer height="10" />
+
+			<p:dataTable id="cadDataTable" value="#{planoBean.listaPlanos}" var="item"
+				emptyMessage="Nenhuma informação a ser exibida" paginator="true"
+				rows="15" paginatorPosition="bottom" selectionMode="single"
+				selection="#{planoBean.planoSel}" rowKey="#{item.cdPlano}"
+				reflow="true">
+
+				<p:ajax event="rowSelect" update="frm:cadToolbar" />
+				<p:ajax event="rowUnselect" update="frm:cadToolbar" />
+
+				<p:column headerText="Código" width="10%" sortBy="#{item.cdPlano}">
+					<h:outputText value="#{item.cdPlano}">
+						<f:convertNumber pattern="000" />
+					</h:outputText>
+				</p:column>
+
+				<p:column headerText="Nome" width="70%"
+					sortBy="#{item.nmPlano}">
+					<h:outputText value="#{item.nmPlano}" />
+				</p:column>
+
+				<p:column headerText="Ano" width="8%">
+					<h:outputText value="#{item.nrAno}" />
+				</p:column>
+				
+				<p:column headerText="Status" width="12%">
+					<h:outputText value="#{item.status.descricao}" />
+				</p:column>
+
+			</p:dataTable>
+			
+			
+			<p:dialog id="cadDialog" header="Manutenção de Planos Orçamentários"
+				widgetVar="cadDialogWidgetVar" modal="true" resizable="false"
+				closeOnEscape="true">
+				<p:messages id="cargoMessages" />
+
+				<p:defaultCommand target="salvarCommandButton" scope="cadDialog" />
+
+				<h:panelGrid id="cargoPanelGrid" columns="2"
+					columnClasses="colunaEsquerda,colunaDireita"
+					rendered="#{planoBean.planoSel ne null}">
+
+					<p:outputLabel value="Código Plano:"/>
+					<h:outputText value="#{planoBean.planoSel.cdPlano}" styleClass="textoNegrito">
+						<f:convertNumber pattern="000" />
+					</h:outputText>
+
+					<p:outputLabel value="Nome Plano:" for="nmPlano" />
+					<p:inputText id="nmPlano" size="30" maxlength="30"
+						value="#{planoBean.planoSel.nmPlano}" />
+					
+					<p:outputLabel value="Situação: " for="status" />
+					<p:selectOneMenu id="status" value="#{planoBean.planoSel.status}" rendered="#{planoBean.planoSel.cdPlano ne 0}">
+						<f:selectItem itemLabel="Selecione..."/>
+						<f:selectItems value="#{planoBean.listaStatus}" var="tip"
+							itemLabel="#{tip.descricao}" itemValue="#{tip}" />
+					</p:selectOneMenu>
+					<h:outputText value="#{planoBean.planoSel.status.descricao}" styleClass="textoNegrito"
+						rendered="#{planoBean.planoSel.cdPlano eq 0}"/>
+					
+
+					<p:outputLabel value="Ano do Orçamento:" for="nrAno" />
+					<p:inputMask id="nrAno" mask="9999" value="#{planoBean.planoSel.nrAno}" size="4"/>					
+					
+					<p:outputLabel value="Meses Abertos:" for="meses" />
+					<p:selectCheckboxMenu id="meses" value="#{planoBean.mesesAbertos}"
+						label="Meses Abertos" multiple="true" panelStyle="width:450px">
+						
+			            <f:selectItems value="#{planoBean.mesAno.meses}" />
+			        </p:selectCheckboxMenu>
+					<h:outputText />
+
+					<p:commandButton id="salvarCommandButton" value="Salvar"
+						actionListener="#{planoBean.salvar}"
+						update="cargoPanelGrid cargoMessages"
+						oncomplete="if (!args.validationFailed) PF('cadDialogWidgetVar').hide()"
+						process="cadDialog" />
+
+				</h:panelGrid>
+			</p:dialog>
+
+
+			<!-- PAINEL DE IMPORTAÇÃO DE CENÁRIO -->
+			<p:dialog id="importarDialog" header="Importar cenário"
+				widgetVar="importarDialogWidgetVar" modal="true" resizable="false" closeOnEscape="true">
+				
+				<p:messages id="importarMessages" />
+				
+				<h:panelGrid id="importarPanelGrid" columns="1"
+					rendered="#{planoBean.planoSel ne null}">
+
+					<p:outputLabel value="Cenário DESTINO:"/>
+					<h:outputText value="#{planoBean.planoSel.nmPlano}" styleClass="textoNegrito"/>
+					
+					<br/>
+					
+					<p:outputLabel value="Importar do Cenário:"/>
+					<p:selectOneMenu value="#{planoBean.planoOrigem}" var="pla">
+						<f:selectItem itemLabel="Selecione..."/>
+						<f:selectItems value="#{planoBean.listaPlanos}" var="item"
+							itemValue="#{item}" itemLabel="#{item.nmPlano}"/>
+						
+						<p:column headerText="Nome">
+							<h:outputText value="#{pla.nmPlano}" />
+						</p:column>
+						
+						<p:column headerText="Ano">
+							<h:outputText value="#{pla.nrAno}" />
+						</p:column>
+							
+						<p:column headerText="Status">
+							<h:outputText value="#{pla.status.descricao}" />
+						</p:column>
+							
+						<p:ajax event="change" process="@this" update="frm:txtMsg frm:importarCB" 
+							listener="#{planoBean.validarImportacao}"/>
+					</p:selectOneMenu>
+					
+					<br/>
+					
+					<div id="divMsg">
+						<h3 style="margin-top:5;margin-botton:5">
+							<h:outputText id="txtMsg" value="#{planoBean.mensagem}"
+								escape="false"/>
+						</h3>
+					</div>
+					
+					<br/>
+					
+					<p:commandButton id="importarCB" value="Importar"
+						disabled="#{!planoBean.valido}"
+						actionListener="#{planoBean.executarImportacao}"
+						oncomplete="if (!args.validationFailed) PF('importarDialogWidgetVar').hide()"
+						process="importarDialog"
+						update="importarMessages" />
+				
+				
+				</h:panelGrid>
+				
+			</p:dialog>
+			
+		</h:form>
+	</ui:define>
+
+	<ui:define name="rodape">1.0.0</ui:define>
+
+</ui:composition>

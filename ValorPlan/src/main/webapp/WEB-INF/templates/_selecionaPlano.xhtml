@@ -1,0 +1,29 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+    xmlns:h="http://java.sun.com/jsf/html"
+    xmlns:f="http://java.sun.com/jsf/core"
+    xmlns:ui="http://java.sun.com/jsf/facelets"
+    xmlns:p="http://primefaces.org/ui">
+
+	<p:selectOneMenu value="#{planoBean.cenarioSelecionado}" var="pla">
+		<f:selectItems value="#{planoBean.listaPlanos}" var="item"
+			itemValue="#{item}" itemLabel="#{item.nmPlano}"/>
+		
+		<p:column headerText="Nome">
+			<h:outputText value="#{pla.nmPlano}" />
+		</p:column>
+		
+		<p:column headerText="Ano">
+			<h:outputText value="#{pla.nrAno}" />
+		</p:column>
+			
+		<p:column headerText="Status">
+			<h:outputText value="#{pla.status.descricao}" />
+		</p:column>
+			
+		<p:ajax event="change" process="@this" 
+			listener="#{planoBean.selecionarPlano}"/>
+	</p:selectOneMenu>
+	
+
+  	
+</ui:composition>

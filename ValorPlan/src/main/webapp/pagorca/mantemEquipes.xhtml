@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+ 	xmlns:h="http://xmlns.jcp.org/jsf/html"
+ 	xmlns:f="http://xmlns.jcp.org/jsf/core"
+ 	xmlns:p="http://primefaces.org/ui"
+ 	xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+ 	template="/WEB-INF/templates/Layout.xhtml">
+
+<ui:define name="titulo">Manutenção de Equipes</ui:define>
+
+<ui:define name="conteudo">
+
+	<f:metadata>
+		<f:viewAction action="#{loginBean.validarPermissao('114;')}"/>
+		<f:viewAction action="#{depArvoreBean.criarEstruturaDepartamentos}"/>
+	</f:metadata>
+
+	<h:form id="frm">
+		<p:growl id="messages" />
+		
+		<p:toolbar id="layoutToolbar">
+			<f:facet name="left">
+				<h:panelGrid columns="2">
+					<h:outputText value="Visualização:"/>
+					
+					<p:commandLink action="#{paramEquipeBean.mudarVisualizacao}" styleClass="js-toggle ui-icon fa fa-search"
+						update="frm:recursoDT frm:recursoDT2"/>
+		
+				</h:panelGrid>
+			
+			</f:facet>
+		</p:toolbar>
+		
+		
+
+		<div class="ui-grid  ui-grid-responsive ci9-arvore js-content">
+			<div class="ui-grid-row">
+				<div class="ui-grid-col-2 coluna-arvore">
+				
+    				<p:tree id="departamentoTree" value="#{depArvoreBean.estrut}" var="doc"
+				        selectionMode="single" selection="#{depArvoreBean.selectedNode}"
+				        style="border: 0">
+				       
+				        <p:treeNode expandedIcon="fa fa-folder-open" collapsedIcon="fa fa-folder">
+				            <h:outputText value="#{doc.sgDepartamento}:" styleClass="textoNegrito"/>
+				            <h:outputText value=" #{doc.responsavel.nomeVinculo}"/>
+				        </p:treeNode>
+							
+						<p:treeNode type="setor" icon="fa fa-file-o">
+				            <h:outputText value="#{doc.codExterno} - #{doc.cecDsResumida}: #{doc.responsavel.nomeVinculo}" />
+				        </p:treeNode>
+				       	
+				        
+						<p:ajax event="select" update="frm:cadToolbar frm:descrDepartamento frm:recursoDT" 
+							listener="#{paramEquipeBean.listarRecursos(depArvoreBean.selectedNode)}"/>
+				        
+				        <p:ajax event="unselect" update="frm:cadToolbar frm:descrDepartamento frm:recursoDT" 
+							listener="#{paramEquipeBean.limparRecurso}"/>
+				        
+				    </p:tree>
+    			</div>
+    			
+    			<div class="ui-grid-col-10">
+    				<h3 style="margin-top:5">
+    					<h:outputText id="descrDepartamento" value="#{paramEquipeBean.descrDepartamento}"/>
+    				</h3>
+    				
+    				<p:toolbar id="cadToolbar">
+						<f:facet name="left">
+							<p:commandButton value="Novo" icon="fa fa-plus"
+								title="Inclui novo recurso para este centro de custo"
+								actionListener="#{paramEquipeBean.inicializarRegistro}"
+								oncomplete="if (!args.validationFailed) PF('cadDialogWidgetVar').show()"
+								update="frm:cadDialog" process="@this">
+								
+								<p:resetInput target="frm:cadDialog" />
+							</p:commandButton>
+							
+							<p:commandButton value="Vincula Colaboradores" icon="fa fa-plus"
+								title="Inclui novo recurso para este centro de custo"
+								actionListener="#{paramEquipeBean.reiniciarLista}"
+								oncomplete="if (!args.validationFailed) PF('importaDialogWidgetVar').show()"
+								update="frm:importaDialog" process="@this">
+								
+								<p:resetInput target="frm:importaDialog" />
+							</p:commandButton>
+							
+						</f:facet>
+					</p:toolbar>
+					
+					<p:dataTable id="recursoDT" value="#{paramEquipeBean.listaRecurso}"
+							style="width: 100%; font-size: 1em" scrollable="true" scrollHeight="380"
+							var="item" emptyMessage="Nenhuma informação a ser exibida"
+							selectionMode="single" selection="#{paramEquipeBean.recursoSel}" rowKey="#{item.cdRecurso}">
+							
+							
+						<p:column headerText="Ações" styleClass="central" style="width:65px">
+				            <p:commandLink title="Remove" styleClass="ui-icon fa fa-trash"
+				            	action="#{paramEquipeBean.excluirRecurso}"
+				            	process="frm:recursoDT"
+				            	update="frm:messages frm:recursoDT"
+				            	style="display: inline; padding-right: 11px;">
+				            	
+				                <f:setPropertyActionListener value="#{item}" target="#{paramEquipeBean.recursoSel}" />
+				                
+				                <p:confirm icon="ui-icon-alert" header="Confirmação de Exclusão"
+									message="Deseja realmente excluir?" />
+				                
+				            </p:commandLink>
+				            
+				            <p:commandLink title="Editar" styleClass="ui-icon fa fa-edit"
+				            	process="@this"
+				            	update="frm:cadDialog"
+				            	oncomplete="PF('cadDialogWidgetVar').show()"
+								style="display: inline; padding-right: 8px;">
+				            	
+				                <f:setPropertyActionListener value="#{item}" target="#{paramEquipeBean.recursoSel}" />
+				                
+				                <p:resetInput target="frm:cadDialog" />
+				            </p:commandLink>
+				            
+				        </p:column>
+						
+						<p:column headerText="Nome Recurso" width="34%" sortBy="#{item.nmRecurso}">
+							<h:outputText value="#{item.nmRecurso}"/>
+						</p:column>
+						
+						<p:column headerText="Cargo" width="23%" sortBy="#{item.cargo.dsCargo}">
+							<h:outputText value="#{item.cargo.dsCargo}"/>
+						</p:column>
+				
+						<p:column headerText="Tipo Recurso" width="12%" sortBy="#{item.tipo.descricao}">
+							<h:outputText value="#{item.tipo.descricao}"/>
+						</p:column>
+						
+						<p:column headerText="Vinculo" width="27%" sortBy="#{item.vinculo.nmFuncionario}">
+							<h:outputText value="#{item.vinculo.nmFuncionario}"/>
+						</p:column>
+						
+					</p:dataTable>
+				</div>
+				
+    		</div>
+    	</div>
+			
+		
+		<div class="ui-grid  ui-grid-responsive ci9-equipe js-content">
+			<div class="ui-grid-row">
+				<div class="ui-grid-col-12">
+			
+					<p:dataTable id="recursoDT2" value="#{paramEquipeBean.listaRecurso}"
+							style="width: 100%" scrollable="true" scrollHeight="390"
+							var="item" emptyMessage="Nenhuma informação a ser exibida"
+							selectionMode="single" selection="#{paramEquipeBean.recursoSel}" rowKey="#{item.cdRecurso}">
+							
+							
+						<p:column headerText="Ações" styleClass="central" style="width:70px">
+				            <p:commandLink title="Remove" styleClass="ui-icon fa fa-trash"
+				            	action="#{paramEquipeBean.excluirRecurso}"
+				            	process="frm:recursoDT"
+				            	update="frm:messages frm:recursoDT"
+				            	style="display: inline; padding-right: 8px;">
+				            	
+				                <f:setPropertyActionListener value="#{item}" target="#{paramEquipeBean.recursoSel}" />
+				                
+				                <p:confirm icon="ui-icon-alert" header="Confirmação de Exclusão"
+									message="Deseja realmente excluir?" />
+				                
+				            </p:commandLink>
+				            
+				            <p:commandLink title="Editar" styleClass="ui-icon fa fa-edit"
+				            	process="@this"
+				            	update="frm:cadDialog"
+				            	oncomplete="PF('cadDialogWidgetVar').show()"
+								style="display: inline; padding-right: 8px;">
+				            	
+				                <f:setPropertyActionListener value="#{item}" target="#{paramEquipeBean.recursoSel}" />
+				                
+				                <p:resetInput target="frm:cadDialog" />
+				            </p:commandLink>
+				            
+				        </p:column>
+						
+						<p:column headerText="Centro de Custo" width="7%" sortBy="#{item.setor.codExterno}">
+							<h:outputText value="#{item.setor.codExterno}"/>
+						</p:column>
+						
+						<p:column headerText="Descrição" sortBy="#{item.setor.cecDsResumida}">
+							<h:outputText value="#{item.setor.cecDsResumida}"/>
+						</p:column>
+						
+						<p:column headerText="Nome Recurso" sortBy="#{item.nmRecurso}">
+							<h:outputText value="#{item.nmRecurso}"/>
+						</p:column>
+						
+						<p:column headerText="Cargo" sortBy="#{item.cargo.dsCargo}">
+							<h:outputText value="#{item.cargo.dsCargo}"/>
+						</p:column>
+				
+						<p:column headerText="Tipo Recurso" width="6%" sortBy="#{item.tipo.descricao}">
+							<h:outputText value="#{item.tipo.descricao}"/>
+						</p:column>
+						
+						<p:column headerText="Vinculo" sortBy="#{item.vinculo.nmFuncionario}">
+							<h:outputText value="#{item.vinculo.nmFuncionario}"/>
+						</p:column>
+						
+					</p:dataTable>
+					
+					
+				</div>
+			</div>
+		</div>
+			
+		<!-- DIÁLOGO -->
+		<p:dialog id="cadDialog" header="Recurso"
+			widgetVar="cadDialogWidgetVar" modal="true" resizable="false"
+			closeOnEscape="true"
+			responsive="true">
+			
+			<p:messages id="cadMessages" />
+
+			<p:defaultCommand target="salvarCB" scope="cadDialog" />
+
+			<p:panelGrid id="cadPanelGrid" columns="2" 
+				styleClass="ui-panelgrid-blank" 
+				rendered="#{paramEquipeBean.recursoSel ne null}">
+           
+				<p:outputLabel value="ID Interno:" />
+				<h:outputText value="#{paramEquipeBean.recursoSel.cdRecurso}"
+					styleClass="textoNegrito">
+					<f:convertNumber pattern="0000000" />
+				</h:outputText>
+				
+				<p:outputLabel value="Nome Recurso:" />
+				<p:inputText value="#{paramEquipeBean.recursoSel.nmRecurso}" size="30" maxlength="30"/>
+
+				<p:outputLabel value="Cargo:" />
+				<p:selectOneMenu value="#{paramEquipeBean.recursoSel.cargo}" id="cdCargo" required="true"
+					filter="true" filterMatchMode="contains">
+					
+					<f:selectItem itemLabel="Selecione..."/>
+					<f:selectItems value="#{paramEquipeBean.cargos}" var="cargo"
+						itemValue="#{cargo}" itemLabel="#{cargo.dsCargo}"/>
+				</p:selectOneMenu>
+
+							
+				<p:outputLabel value="Tipo do Recurso:" />
+				<p:selectOneMenu id="tipoCargo" value="#{paramEquipeBean.recursoSel.tipo}">
+					<f:selectItem itemLabel="Selecione..." />
+					<f:selectItems value="#{paramEquipeBean.tiposRecurso}" var="tip"
+						itemLabel="#{tip.descricao}" itemValue="#{tip}" />
+				</p:selectOneMenu>
+							
+				<p:outputLabel value="Vinculo:" />
+					<p:selectOneMenu id="funcionario" value="#{paramEquipeBean.recursoSel.vinculo}" var="func"
+						filter="true" filterMatchMode="contains"
+						style="vertical-align:middle">
+						
+						<f:selectItem itemLabel="Sem Vínculo..."/>
+						<f:selectItems value="#{paramEquipeBean.funcionarios}" var="item" 
+							itemValue="#{item}" itemLabel="#{item.nmFuncionario}"/>
+						
+						<p:column headerText="Funcionario">
+							<h:outputText value="#{func.nmFuncionario}" />
+						</p:column>
+						<p:column headerText="Setor">
+							<h:outputText value="#{func.cenCusto.codExterno}" />
+						</p:column>
+						<p:column headerText="Descrição">
+							<h:outputText value="#{func.cenCusto.cecDsResumida}" />
+						</p:column>
+						<p:column headerText="Cargo">
+							<h:outputText value="#{func.cargo.dsCargo}" />
+						</p:column>
+					</p:selectOneMenu>
+							
+	
+				<h:outputText/>			
+				<p:commandButton value="Salvar" id="salvarCB" icon="fa fa-save"
+					actionListener="#{paramEquipeBean.salvar}"
+					process="cadDialog" 
+					update="cadPanelGrid cadMessages"
+					oncomplete="if (!args.validationFailed) PF('cadDialogWidgetVar').hide()" />
+				
+			</p:panelGrid>
+		</p:dialog>
+		
+		
+		<p:dialog id="importaDialog" header="Vinculo Automático"
+			widgetVar="importaDialogWidgetVar" modal="true" resizable="false"
+			closeOnEscape="true"
+			responsive="true">
+
+				<p:panelGrid columns="2" styleClass="ui-panelgrid-blank"
+					columnClasses="esqueda, direita">
+					
+					<p:outputLabel value="Cria Vínculo:" />
+					
+			        <p:commandButton value="Vincular" id="vincularCB" icon="fa fa-save"
+						actionListener="#{paramEquipeBean.criarVinculo}"
+						process="importaDialog" 
+						update="frm:messages frm:recursoDT"
+						oncomplete="PF('importaDialogWidgetVar').hide()" />
+					
+					<f:facet name="footer">
+						
+				        <p:selectManyMenu value="#{paramEquipeBean.funcionariosSelecionados}" 
+				        	var="item" converter="#{conversorFuncionario}"
+				        	filter="true" filterMatchMode="contains" showCheckbox="true"
+				        	style="width: 270px; font-size: .8em" scrollHeight="300">
+				            
+				 			<f:selectItems value="#{paramEquipeBean.funcionarios}" var="func" 
+				            	itemLabel="#{func.nmFuncionario}" 
+				            	itemValue="#{func}"/>
+				            	
+				            <p:column>
+				                <h:outputText value="#{item.nmFuncionario}" />
+				            </p:column>
+
+				            <p:column>
+				                <h:outputText value="#{item.cargo.dsCargo}" />
+				            </p:column>
+				        </p:selectManyMenu>
+					</f:facet>
+			        
+				</p:panelGrid>
+
+		</p:dialog>		
+			
+	</h:form>		
+</ui:define>
+
+<ui:define name="rodape">Titulo</ui:define>
+
+</ui:composition>

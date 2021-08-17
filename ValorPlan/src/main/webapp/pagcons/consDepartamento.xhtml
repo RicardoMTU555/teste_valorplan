@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+ 	xmlns:h="http://xmlns.jcp.org/jsf/html"
+ 	xmlns:f="http://xmlns.jcp.org/jsf/core"
+ 	xmlns:p="http://primefaces.org/ui"
+ 	xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+ 	template="/WEB-INF/templates/Layout.xhtml">
+
+<ui:define name="titulo">Estrutura Organizacional da Empresa</ui:define>
+
+<ui:define name="conteudo">
+
+<style type="text/css">
+    .ui-button {
+        margin-top: 10px;
+        margin-right: 5px;
+        margin-bottom: 7px;
+    }
+</style>
+ 
+ <f:metadata>
+	<f:viewAction action="#{loginBean.validarPermissao(';0;')}" />
+	<f:viewAction action="#{depArvoreBean.carregarArvore}"/>
+ </f:metadata>
+ 
+<h:form id="frm">
+    <p:growl id="msgs" showDetail="true" escape="false"/>
+    
+	<div id="estrutura">
+		<h3 style="margin-top:0;margin-botton:0">
+			<h:outputText value="Ano Referência: "/>
+			<p:inputMask id="nrAno" mask="9999" value="#{depArvoreBean.anoReferencia.ano}" size="4"/>
+			
+			<p:commandButton value="Visualizar Estrutura do Ano" icon="fa fa-search"
+		    	actionListener="#{depArvoreBean.carregarArvore}"
+		    	process="@this nrAno" update="frm:estruturaTree"
+		    	style="margin-left: 20px"/>
+		    	
+		    <p:button value="Voltar à tela anterior" icon="fa fa-undo"
+		    	title="Retorna ao cadastro de Departamentos"
+		    	outcome="/pagcdst/cadDepartamento?faces-redirect=true"
+		    	ajax="false"
+		    	style="margin-left: 5px"/>
+		</h3>
+	</div>
+    
+	<p:tree id="estruturaTree" value="#{depArvoreBean.root1}" var="node" orientation="horizontal"
+		selectionMode="single" selection="#{depArvoreBean.selectedNode}">
+
+        <p:treeNode>
+            <h:outputText value="#{node.sgDepartamento}" styleClass="textoNegrito"
+            	style="font-size: 0.9em"/>
+            <br/>
+            <h:outputText value=" #{node.responsavel.nomeVinculo}"
+            	style="font-size: 0.8em"/>
+        </p:treeNode>
+        
+        <p:treeNode type="setor">
+            <h:outputText value="#{node.cecDsResumida}" style="font-size: 0.9em"/>
+            <br/>
+            <h:outputText value=" #{node.responsavel.nomeVinculo}" style="font-size: 0.8em"/>
+        </p:treeNode>
+        
+        <p:ajax event="select" listener="#{depArvoreBean.MostraSelecionado}"
+        	oncomplete="PF('deptoDialogWidgetVar').show()"
+        	update="frm:deptoDialog" process="@this">
+						
+			<p:resetInput target="frm:deptoDialog" />
+		</p:ajax>
+    </p:tree>
+
+             
+    <p:dialog id="deptoDialog" header="Detalhes do setor"
+		widgetVar="deptoDialogWidgetVar" modal="true" resizable="false"
+		closeOnEscape="true">
+		<p:messages id="filialMessages" />
+
+		<h:panelGrid id="cencusPanelGrid" columns="2"
+			columnClasses="colunaEsquerda,colunaDireita"
+			rendered="#{depArvoreBean.cencus ne null}">
+
+			<h2>Centro de Custo</h2>
+			<h:outputText/>
+			
+			<p:outputLabel value="Código Externo:" />
+			<h:outputText value="#{depArvoreBean.cencus.codExterno}"
+				styleClass="textoNegrito"/>
+
+			<p:outputLabel value="Descrição Resumida:" />
+			<h:outputText value="#{depArvoreBean.cencus.cecDsResumida}"
+				styleClass="textoNegrito"/>
+
+			<p:outputLabel value="Descrição Completa:" />
+			<h:outputText value="#{depArvoreBean.cencus.cecDsCompleta}"
+				styleClass="textoNegrito"/>
+
+			<p:outputLabel value="Área:" />
+			<h:outputText value="#{depArvoreBean.cencus.tipoArea.descricao}"
+				styleClass="textoNegrito"/>
+
+			<p:outputLabel value="Gestor:" />
+			<h:outputText value="#{depArvoreBean.cencus.responsavel.nomeVinculo}"
+				styleClass="textoNegrito"/>
+
+		</h:panelGrid>
+		
+		<h:panelGrid id="deptoPanelGrid" columns="2"
+			columnClasses="colunaEsquerda,colunaDireita"
+			rendered="#{depArvoreBean.depto ne null}">
+		
+			<h2>Departamento</h2>
+			<h:outputText/>
+							
+			<p:outputLabel value="Sigla:" />
+			<h:outputText value="#{depArvoreBean.depto.sgDepartamento}" styleClass="textoNegrito"/>
+				
+			<p:outputLabel value="Descrição:" />
+			<h:outputText value="#{depArvoreBean.depto.dsDepartamento}" styleClass="textoNegrito"/>
+				
+			<p:outputLabel value="Gestor:" />
+			<h:outputText value="#{depArvoreBean.depto.responsavel.nomeVinculo}"
+				styleClass="textoNegrito"/>
+				
+			<p:outputLabel value="Departamento PAI:" />
+			<h:outputText value="#{depArvoreBean.depto.departamentoPai.sgDepartamento} - #{depArvoreBean.depto.departamentoPai.dsDepartamento}"
+				styleClass="textoNegrito"/>
+				
+		</h:panelGrid>
+		
+	</p:dialog>
+	  
+</h:form>
+	
+</ui:define>
+
+<ui:define name="rodape">1.0.0</ui:define>
+
+</ui:composition>

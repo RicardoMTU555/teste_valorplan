@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://xmlns.jcp.org/jsf/html"
+	xmlns:f="http://xmlns.jcp.org/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+	template="/WEB-INF/templates/Layout.xhtml">
+
+	<ui:define name="titulo">Cadastro de Categorias de Produtos e Serviços</ui:define>
+
+	<ui:define name="conteudo">
+
+		<f:metadata>
+			<f:viewAction action="#{loginBean.validarPermissao('13;')}" />
+			<f:viewAction action="#{catReceitaBean.listarTudo}" />
+		</f:metadata>
+
+		<h:form id="frm">
+			<p:growl id="messages" />
+			
+			<p:toolbar id="cadToolbar">
+				<f:facet name="left">
+				    <p:button value="Voltar" icon="fa fa-undo"
+				    	title="Retorna ao cadastro de Receitas"
+				    	outcome="/pagcdst/cadReceita?faces-redirect=true" 	ajax="false"/>
+					
+					<span class="ui-separator">
+		                <span class="ui-icon ui-icon-grip-dotted-vertical" />
+		            </span>
+		            			
+					<p:commandButton value="Incluir" icon="fa fa-plus"
+						actionListener="#{catReceitaBean.novoRegistro}"
+						process="@this"
+						update="cadDataTable frm:messages" />
+
+					<span class="ui-separator">
+		                <span class="ui-icon ui-icon-grip-dotted-vertical" />
+		            </span>
+					
+					<p:commandButton value="Salvar" icon="fa fa-save"
+						title="Grava as alterações efetuadas"
+						actionListener="#{catReceitaBean.salvar}"
+						process="@this frm:cadDataTable"
+						update="cadDataTable frm:messages" />
+				</f:facet>
+			</p:toolbar>
+
+			<p:spacer height="10" />
+
+			<p:dataTable id="cadDataTable" style="width:100%;"
+				value="#{catReceitaBean.categorias}" var="item"
+				emptyMessage="Nenhuma informação a ser exibida"
+				selectionMode="single" selection="#{catReceitaBean.categoria}" rowKey="#{item.cdCategoria}"
+				scrollable="true" scrollHeight="300"
+				reflow="true">
+
+				<p:column headerText="Remove" width="15%" styleClass="central">
+					<p:commandLink 
+						action="#{catReceitaBean.excluir}"
+						process="@this"
+						update="frm:messages cadDataTable">
+						
+						<f:setPropertyActionListener value="#{item}" target="#{catReceitaBean.categoria}"/>
+						
+						<h:graphicImage value="../resources/ctbli9/images/delete.png"
+							title="Excluir Item"/>
+							
+						<p:confirm icon="ui-icon-alert" header="Confirmação de Exclusão" 
+		            		message="Posso excluir esta categoria?" />
+					</p:commandLink>	
+				</p:column>
+
+				<p:column headerText="Descrição" width="65%"
+					sortBy="#{item.dsCargo}">
+					<p:inputText id="descricao" size="40" maxlength="40" value="#{item.dsCategoria}" />
+				</p:column>
+
+				<p:column headerText="Medida" width="27%" >
+					<p:selectOneMenu id="medida" value="#{item.medida}" rendered="#{true}"> 
+						<f:selectItems value="#{catReceitaBean.medidasOrcamento}" var="medida"
+							itemValue="#{medida}" itemLabel="#{medida.descricao}"/>
+							
+						<p:ajax event="change" process="@this"/>
+					</p:selectOneMenu>
+				</p:column>
+
+			</p:dataTable>
+
+		</h:form>
+	</ui:define>
+
+	<ui:define name="rodape">1.0.0</ui:define>
+
+</ui:composition>

@@ -1,0 +1,185 @@
+/* TOPBAR */
+.ci9-topbar {
+	position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    
+    border-bottom: 2px solid #bbbbbb;
+	margin-bottom: 5px;
+}
+
+.ci9-barra-menu {
+	padding: 5px;
+	height: 52px;
+	background-color: #0d0873;
+	color: #c3c3c3;
+	box-shadow: 0px 2px 2px #ccc;
+	font-family: Arial;
+	font-size: 20px;
+	font-weight: 500;
+}
+
+.ci9-topbar-logo {
+	float: left;
+	margin-top: 5px;
+	margin-left: 5px;
+}
+.ci9-topbar-plano {
+	float: left; 
+	margin-left: 50px; 
+	margin-top: 25px; 
+	font-size: 10px;
+}
+.ci9-topbar-menu-h {
+	float: right; 
+	margin-right: 50px; 
+	margin-top: 25px;
+}
+
+.ci9-barra-usuario {
+	padding-left: 10px;
+	padding-right: 10px;
+	font-size: 1.1em;
+	background-color: #4169e1;
+	color: #fff;
+	height: 25px;
+	line-height: 25px;
+}
+
+.ci9-barra-programa {
+	float: right;
+	font-weight: bold;
+	padding-right: 10px;	
+}
+
+@media (max-width: 767px) {        /* média querie breakpoint: de 767 para baixo */
+	
+	.ci9-topbar-menu-h {
+		display: none;
+	}
+	
+	.ci9-barra-usuario {
+		height: 36px;
+	}
+	
+	.ci9-topbar-plano {
+		float: none;
+		display: inline;
+		margin-left: 10px;
+		margin-top: 0px;  
+		font-size: 10px;
+	}	
+
+	.ci9-barra-programa {
+		float: none;
+		padding-left: 10px;	
+	}
+	
+}
+
+
+/* SIDEBAR */
+.ci9-sidebar {
+	position: fixed;        /* fixando a barra na lateral. Se o conteúdo rolar, a barra fica fixa */
+	top: 70px;              /* limite superior em relação do viewport */
+	bottom: 0;             /* limite inferior em relação do viewport */
+	left: 0;                /* limite esquerdo em relação do viewport */
+	width: 200px;           /* largura da barra a partir do limite esquerdo */
+	margin-left: -201px;    /* coloca a barra em -211 pixels antes do viewport, assim ela "some" da tela (sua largura é de 210px */
+	z-index: 9998;          /* evita que algum elemento fica por cima da barra */
+	transition: margin-left 0.5s;  /* transição: quando mudar a margem, mas uma transição mais "demorada" ou suave */
+	overflow-y: auto;              /*no EIXO Y (vertical) coloca barra de rolagem se precisar */
+	
+	background-color: #f6f6f6;        /* cor de fundo */
+	border-right: 1px solid #eaeaea;  /* borda direita */
+}
+
+.ci9-sidebar.is-toggled { /* Quando um elemento HTML tiver a classe ci9-sidebar E AO MESMO TEMPO TIVER is-toggled (sem espaço entre as classes) */
+	margin-left: 0px;    /* configure o que está dentro da das classes (aparece com o menu) */
+}
+
+
+@media (min-width: 767px) { /* media-queries: breakpoint: quando o viewport for MAIOR que 767, a margem esquerda da barra será 0, assim ela irá aparecer */
+	.ci9-sidebar {
+		margin-left: 0px;
+		display: none;
+	}
+	
+	.ci9-sidebar.is-toggled { /* Quando um elemento HTML tiver a classe ci9-sidebar E AO MESMO TEMPO TIVER is-toggled (sem espaço entre as classes) */
+		margin-left: -201px; /* some com o menu */
+	}
+}
+
+
+
+/* CONTENT */
+.ci9-content {
+	padding: 2px 7px; /* 2 em cima e em baixo; 7 esquerda e direita */
+	margin-top: 100px;              /* pra ficar abaixo da barra de título/menu */
+}
+
+@media (max-width: 767px) {        /* média querie breakpoint 767 para baixo*/
+	.ci9-content {
+		margin-top: 170px;              /* pra ficar abaixo da barra de título/menu */
+	}	
+}
+
+
+/* RODAPE */
+.ci9-rodape {		
+	border-top: 1px solid #ccc;
+	padding: 10px;
+	margin-top: 5px;
+	margin-bottom: 0px;
+	font-family: Arial;
+	font-size: 12px;
+	font-weight: bold;
+	background-color: #0d0873;
+	color: #fff;
+		
+}
+
+@media (max-width: 767px) {        /* média querie breakpoint: de 767 para baixo */
+	.ci9-rodape {
+		display: none;
+	}
+}
+
+/* ************************************* */
+/*   PAINEL DO LOGIN                     */
+/* ************************************* */
+
+.painel-login {
+	width: 270px;
+	margin: auto;          /* Centraliza a div em relação ao formulário */
+	
+	margin-top: 100px;
+	margin-bottom: 100px;
+	padding: 10px
+}
+
+.painel-login-dados {	
+	background-color: #f2f2f2;
+	border-radius: 8px;
+	border: 1px solid #ccc;
+}
+
+.cor-painel-login-dados {
+	background-color: #f2f2f2;
+}
+
+.ci9-arvore {
+	display: block;
+}
+.ci9-equipe {
+	display: none;
+}
+
+.ci9-arvore.is-toggled { /* Quando um elemento HTML tiver a classe ci9-arvore E AO MESMO TEMPO TIVER is-toggled (sem espaço entre as classes) */
+	display: none;
+}
+.ci9-equipe.is-toggled { /* Quando um elemento HTML tiver a classe ci9-equipe E AO MESMO TEMPO TIVER is-toggled (sem espaço entre as classes) */
+	display: block;
+}

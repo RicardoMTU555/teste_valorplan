@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+ 	xmlns:h="http://xmlns.jcp.org/jsf/html"
+ 	xmlns:f="http://xmlns.jcp.org/jsf/core"
+ 	xmlns:p="http://primefaces.org/ui"
+ 	xmlns:ui="http://xmlns.jcp.org/jsf/facelets">
+<h:head>
+	<f:facet name="first">
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+	</f:facet>
+
+	<title>Planejamento Orçamentário</title>
+
+	<h:outputStylesheet library="ctbli9" name="styles/custom.css" />
+	<h:outputStylesheet library="ctbli9" name="styles/layout.css" />
+	<h:outputStylesheet library="ctbli9" name="styles/components.css" />
+	
+</h:head>
+<h:body>
+
+	<f:metadata>
+		<f:viewAction action="#{loginBean.obtemArea}" />
+	</f:metadata>
+
+	<header class="ci9-topbar ci9-barra-menu">
+		<h:graphicImage library="ctbli9" name="images/logo.png" style="float: left;"/>
+	</header>
+	
+	<div class="painel-login">
+   		<h1>Login</h1>
+   		
+   		<div id="ui-fluid" class="painel-login-dados">
+	   		<h:form id="frm">
+	   			<p:growl id="msg"/>
+	   			
+	   			<p:focus context="frm" for="logUsuario" />
+	   			
+	   			<p:panelGrid id="loginPanelGrid" columns="1" layout="grid"
+					columnClasses="ui-grid-col-12 cor-painel-login-dados"
+					styleClass="panelgrid-noborder">
+	   				
+	   				<p:outputLabel value="Usuário" />
+	   				<p:inputText id="logUsuario" value="#{loginBean.usuario.logUsuario}" 
+	   					size="30" maxlength="30" styleClass="textoMinusculo"/>
+	   				
+	   				<p:outputLabel value="Senha" />
+	   				<p:password value="#{loginBean.usuario.senUsuario}" 
+	   					size="30" maxlength="10"/>
+	   				
+	   				<h:panelGroup/>
+	   				<h:panelGroup>
+		   				<p:commandButton value="Login"
+		   					action="#{loginBean.validarAcesso('PLANI9')}" 
+		   					process="loginPanelGrid" update="msg"
+		   					style="width: 47%"/>
+	
+		   				<p:commandButton value="Alterar Senha"
+		   					style="margin-left: 5px; width: 47%"
+		   					oncomplete="PF('senhaDialogWidgetVar').show()"
+							update="senhaDialog" process="@this">
+							
+							<p:resetInput target="senhaDialog" />
+							
+						</p:commandButton>
+						
+	   				</h:panelGroup>
+	   			</p:panelGrid>
+	   			
+	   			
+	   			<p:dialog id="senhaDialog" header="Alterar Senha"
+					widgetVar="senhaDialogWidgetVar" modal="true" resizable="false"
+					closeOnEscape="true">
+					<p:messages id="senhaMessages" />
+	
+					<p:defaultCommand target="salvarCommandButton" scope="senhaDialog" />
+	
+					<h:panelGrid id="senhaPanelGrid" columns="2" styleClass="grid-login"
+						columnClasses="colunaEsquerda,colunaDireita"
+						rendered="true"	width="390">
+	
+						<p:outputLabel value="Usuário" />
+		   				<p:inputText id="logUsuarioSenha" value="#{loginBean.usuario.logUsuario}" 
+		   					size="20" maxlength="20"/>
+		   				
+		   				<p:outputLabel value="Senha" />
+		   				<p:password value="#{loginBean.usuario.senUsuario}" 
+		   					size="20" maxlength="10"/>
+		   				
+		   				<h:outputText />
+		   				<h:outputText />
+		   				
+						<p:outputLabel value="Nova Senha" />
+	   					<p:password value="#{loginBean.novaSenha1}" 
+	   						size="20" maxlength="10"
+	   						feedback="true" goodLabel="Boa" strongLabel="Forte" weakLabel="Fraca"
+	   						promptLabel="Digite a senha"/>
+						
+						<p:outputLabel value="Confirme a Senha" />
+	   					<p:password value="#{loginBean.novaSenha2}" 
+	   						size="20" maxlength="10"
+	   						feedback="true" goodLabel="Boa" strongLabel="Forte" weakLabel="Fraca"
+	   						promptLabel="Redigite a senha"/>
+						
+						<h:outputText />
+		   				<h:panelGroup>
+							<p:commandButton id="salvarCommandButton" value="Salvar" icon="fa fa-save"
+								actionListener="#{loginBean.salvarSenha('PLANI9')}"
+								update="senhaPanelGrid senhaMessages"
+								oncomplete="if (!args.validationFailed) PF('senhaDialogWidgetVar').hide()"
+								process="senhaDialog" />
+							
+							<p:commandButton value="Cancelar" icon="fa fa-undo"
+			   					style="margin-left: 5px"
+			   					oncomplete="PF('senhaDialogWidgetVar').hide()"
+								process="@this"/>
+		   				</h:panelGroup>
+	
+					</h:panelGrid>
+				</p:dialog>
+				
+	   		</h:form>
+	   	</div>
+   	</div>
+	
+	<footer class="ci9-rodape">
+		ValorPlan Versão 1.0.01 - 
+		<h:outputLink value="https://www.contabilinove.com.br/" target="_blank">
+			<h:outputText value="Desenvolvido por ContabilInove" style="color: white"/>
+		</h:outputLink>
+	</footer>
+	
+	
+	
+</h:body>
+
+</html>
+

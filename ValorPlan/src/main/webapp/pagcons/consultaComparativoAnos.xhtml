@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+ 	xmlns:h="http://xmlns.jcp.org/jsf/html"
+ 	xmlns:f="http://xmlns.jcp.org/jsf/core"
+ 	xmlns:p="http://primefaces.org/ui"
+ 	xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+ 	template="/WEB-INF/templates/Layout.xhtml">
+
+<ui:define name="titulo">Comparativo Entre Anos</ui:define>
+
+<ui:define name="conteudo">
+
+	<f:metadata>
+		<f:viewAction action="#{loginBean.validarPermissao(';0;')}"/>
+	</f:metadata>
+
+	<h:form id="frm">
+		<p:messages id="messages" />
+		
+		<p:toolbar id="filialToolbar">
+			<f:facet name="left">
+				<p:commandButton value="PROCESSAR"
+						actionListener="#{comparativoAnosBean.listarComparativo}"
+						process="@this"
+						update="comparativoDT messages" />
+			
+				<p:commandButton value="Excel" ajax="false">
+					<p:dataExporter type="xls" target="comparativoDT"
+						fileName="PlanilhaComparativo" />
+				</p:commandButton>
+				
+			</f:facet>
+			
+		</p:toolbar>
+		
+		<p:dataTable id="comparativoDT" value="#{comparativoAnosBean.comparativoAno}" var="item"
+				emptyMessage="Nenhuma informação a ser exibida"
+				rowHover="true" 
+				reflow="true">
+			<p:column headerText="Setor" sortBy="#{item.setor.codExterno}">
+				<h:outputText value="#{item.setor.codExterno}" />
+			</p:column>
+		
+			<p:column headerText="Descrição Resumida" sortBy="#{item.setor.cecDsResumida}">
+				<h:outputText value="#{item.setor.cecDsResumida}" />
+			</p:column>
+		
+			<p:column headerText="Conta" sortBy="#{item.conta.cdConta}">
+				<h:outputText value="#{item.conta.cdConta}" />			
+			</p:column>
+		
+			<p:column headerText="Descrição" sortBy="#{item.conta.dsConta}">
+				<h:outputText value="#{item.conta.dsConta}" />
+			</p:column>
+		
+			<p:column headerText="#{comparativoAnosBean.cabecalhoAnterior}">
+				<h:outputText value="#{item.valorRealizadoAnterior}">
+					<f:convertNumber pattern="#,##0.00"/>
+				</h:outputText>			
+			</p:column>
+		
+			<p:column headerText="#{comparativoAnosBean.cabecalhoAtual}">
+				<h:outputText value="#{item.valorOrcadoAtual}">
+					<f:convertNumber pattern="#,##0.00"/>
+				</h:outputText>						
+			</p:column>
+		
+		</p:dataTable>
+
+			
+	</h:form>		
+</ui:define>
+
+<ui:define name="rodape">1.0.0</ui:define>
+
+</ui:composition>

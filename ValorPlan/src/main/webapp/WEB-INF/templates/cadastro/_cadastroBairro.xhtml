@@ -1,0 +1,78 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+    xmlns:h="http://java.sun.com/jsf/html"
+    xmlns:f="http://java.sun.com/jsf/core"
+    xmlns:ui="http://java.sun.com/jsf/facelets"
+    xmlns:p="http://primefaces.org/ui">
+
+	<p:growl id="messagesBairro" />
+	
+	<p:panelGrid id="bairroPanelGrid" columns="2" style="width: 100%"
+		rendered="#{cidadeBean.cidade ne null}">
+	
+			<h:panelGrid columns="1">
+				<h:panelGroup>
+					<p:outputLabel value="Cidade: " style="padding-rigth: 5px"/>
+					<h:outputText value="#{cidadeBean.cidade.nmCidade}" styleClass="textoNegrito"/>
+				</h:panelGroup>
+				
+				<p:scrollPanel style="width:400px;height:400px">
+					<p:dataTable id="bairroDataTable" value="#{cidadeBean.bairros}" var="item" 
+						selectionMode="single" selection="#{cidadeBean.bairro}" rowKey="#{item.cdBairro}"
+						style="width: 370px">
+						
+						<p:ajax event="rowSelect" update="frm:cadBairroPanelGrid" />
+						<p:ajax event="rowUnselect" update="frm:cadBairroPanelGrid" />
+								
+						<p:column headerText="Bairros">
+							<h:outputText value="#{item.nmBairro}"/>
+						</p:column>
+						
+					</p:dataTable>
+				</p:scrollPanel>
+				
+				<p:toolbar id="bairroToolbar">
+					<f:facet name="left">
+						<p:commandButton value="Incluir" icon="fa fa-plus"
+			            	title="Limpa o registro para incluir novo bairro"
+			            	actionListener="#{cidadeBean.inicializarRegBairro}"
+			            	process="@this"
+			            	update="cadBairroPanelGrid bairroToolbar"/>
+			
+						<p:commandButton value="Salvar" 
+							title="Grava o registro"
+							actionListener="#{cidadeBean.salvarBairro}"
+							process="@this cadBairroPanelGrid"
+							update="messagesBairro bairroDataTable cadBairroPanelGrid bairroToolbar"/>
+						
+						
+			            <p:commandButton value="Excluir" icon="fa fa-trash"
+			            	title="Exclui a cidade selecionada" 
+			            	disabled="#{not cidadeBean.itemSelecionado}"
+			            	actionListener="#{cidadeBean.excluirBairro}"
+			            	update="messagesBairro bairroDataTable cadBairroPanelGrid bairroToolbar"
+							process="@this">
+			            	<p:confirm icon="ui-icon-alert" header="Confirmação de Exclusão" 
+			            		message="Deseja Excluir o bairro?" />
+			            </p:commandButton>
+			    	</f:facet>
+				</p:toolbar>
+			</h:panelGrid>
+			
+			<h:panelGrid id="cadBairroPanelGrid" columns="2" columnClasses="colunaEsquerda,colunaDireita">
+				<h:outputText/>
+				<h:outputText/>
+
+				<p:outputLabel value="ID Interno:"/>
+				<h:outputText value="#{cidadeBean.bairro.cdBairro}" styleClass="textoNegrito">
+					<f:convertNumber pattern="000000" />
+				</h:outputText>
+					
+				<p:outputLabel value="Nome:" for="nmBairro"/>
+				<p:inputText id="nmBairro" size="50" maxlength="50" 
+					value="#{cidadeBean.bairro.nmBairro}"/>
+				
+			</h:panelGrid>
+			
+	</p:panelGrid>
+  	
+</ui:composition>

@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://xmlns.jcp.org/jsf/html"
+	xmlns:f="http://xmlns.jcp.org/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+	template="/WEB-INF/templates/Layout.xhtml">
+
+	<ui:define name="titulo">Classificação Contábil</ui:define>
+	
+	<ui:define name="conteudo">
+
+		<f:metadata>
+			<f:viewAction action="#{loginBean.validarPermissao('10;')}" />
+			<f:viewAction action="#{classificacaoCtbBean.listarTudo}" />
+		</f:metadata>
+
+		<h:form id="frm">
+			<p:messages id="msg"/>
+			<p:growl id="messages" escape="false"/>
+
+			<div id="estrutura">
+				<h3 style="margin-top:5;margin-botton:5">
+					<h:outputText value="Ano da Estrutura de DRE: "/>
+					<p:inputMask id="nrAno" mask="9999" value="#{classificacaoCtbBean.anoReferencia.ano}" size="4">
+						<p:ajax event="blur" listener="#{classificacaoCtbBean.listarTudo}" process="nrAno" update="frm:classeTabView"/>
+					</p:inputMask>
+				</h3>
+			</div>
+
+			<p:tabView id="classeTabView">
+				<!-- CLASSES DO DRE -->
+				<p:tab title="Classificação DRE">
+
+					<p:toolbar id="classeContaToolbar">
+						<f:facet name="left">
+
+							<p:commandButton value="Nova" icon="fa fa-plus"
+								actionListener="#{classificacaoCtbBean.inicializarRegistro}"
+								oncomplete="PF('classeContaDialogWidgetVar').show()"
+								update="frm:classeContaDialog" process="@this">
+								<p:resetInput target="frm:classeContaDialog" />
+							</p:commandButton>
+
+							<span class="ui-separator"> <span
+								class="ui-icon ui-icon-grip-dotted-vertical" />
+							</span>
+
+							<p:commandButton value="Gravar Árvore" icon="fa fa-save"
+								title="Salva as alterações de agrupamento feitas na lista"
+								actionListener="#{classificacaoCtbBean.gravarArvore}"
+								update="frm:messages classeContaToolbar classesContaTree"
+								process="@this classesContaTree" />
+								
+							<span class="ui-separator"> <span
+								class="ui-icon ui-icon-grip-dotted-vertical" />
+							</span>
+																
+							<p:commandButton value="Planilha" icon="fa fa-file-excel-o" ajax="true" process="@this"
+								title="Gera planilha do DRE"
+								actionListener="#{classificacaoCtbBean.baixarPlanilha}" 
+								onclick="PrimeFaces.monitorDownload(start, stop) ">
+								
+							     <p:fileDownload value="#{classificacaoCtbBean.file}" />
+					
+							</p:commandButton>
+								
+							<span class="ui-separator"> <span
+								class="ui-icon ui-icon-grip-dotted-vertical" />
+							</span>
+								
+							<p:commandButton value="Replicar" icon="fa fa-gears"
+				            	title="Replica estrutura do DRE de um determinado ano em outro"
+				            	actionListener="#{classificacaoCtbBean.inicializarRegistro}" 
+				            	oncomplete="PF('replicaDialogWidgetVar').show()"
+				            	update="frm:replicaDialog" process="@this">
+				            	<p:resetInput target="frm:replicaDialog"/>
+				            </p:commandButton>
+							
+							<span class="ui-separator"> <span
+								class="ui-icon ui-icon-grip-dotted-vertical" />
+							</span>
+
+							<p:autoComplete id="codigoConta" placeholder="Código da Conta" maxlength="15" size="15"
+								value="#{classificacaoCtbBean.codConta}"
+								completeMethod="#{classificacaoCtbBean.completarCodigo}">
+							
+							</p:autoComplete>
+							<p:commandButton value="Localizar" icon="fa fa-search"
+				            	title="Localiza a conta contábil dentro da estrutura do DRE"
+				            	actionListener="#{classificacaoCtbBean.localizarConta}" 
+				            	update="frm:msg classesContaTree" process="@this codigoConta"/>								
+							
+						</f:facet>
+					</p:toolbar>
+
+					<p:treeTable id="classesContaTree" value="#{classificacaoCtbBean.root1}" var="item" nodeVar="elo"
+						selectionMode="single" selection="#{classificacaoCtbBean.selectedNode}"
+						style="margin-top: 9px; width:970px">
+				        <f:facet name="header">
+				            Demonstrativo do Resultado do Exercício
+				        </f:facet>
+				        
+				        <p:column headerText="Código" style="width:15%" styleClass="fundoVerdeClaro">
+							<h:outputText value="#{item.cdNivelClasse}"/>
+						</p:column>
+						
+						<p:column headerText="Move" style="width:40px">
+							<!-- REGINALDO: Todos os "update" dos links abaixo estão sendo invocados no bean a partir
+								 do método chamado pelo action, porque quando ficava ali, ele perdia o conteudo de "item.temConta" -->
+						
+							<p:commandLink 
+				            	title="Movimenta o item para CIMA" 
+				            	process="@this"
+				            	update="frm:messages classesContaTree"
+				            	action="#{classificacaoCtbBean.moverItemParaCima}"
+				            	style="padding-right: 10px">
+
+								<h:graphicImage	value="../resources/ctbli9/images/setaCima.png"/>
+				            	
+				                <f:setPropertyActionListener value="#{elo}" target="#{classificacaoCtbBean.selectedNode}" />
+				            </p:commandLink>
+						</p:column>
+				        
+				        <p:column headerText="Descrição">
+							<h:outputText value="#{item.dsClasse}"/>
+						</p:column>
+
+						<p:column headerText="Grupo DRE" width="25%">
+							<p:selectOneMenu id="cdGrupoClasse" value="#{item.grupo.cdGrupoClasse}"
+								rendered="#{item.nivel eq 1}">
+								
+								<f:selectItem itemLabel="Selecione..." />
+								<f:selectItems value="#{classificacaoCtbBean.listaGrupoClasse}"
+									var="tip" itemLabel="#{tip.dsGrupoClasse}" itemValue="#{tip.cdGrupoClasse}" />
+							</p:selectOneMenu>
+							
+							<h:outputText value="#{item.grupo.dsGrupoClasse}" 
+								rendered="#{item.nivel ne 1}"/>
+						</p:column>
+
+						<p:column headerText="Ações" style="width:120px">
+							<!--	REGINALDO: Todos os "update" dos links abaixo estão sendo invocados no bean a partir
+									do método chamado pelo action, porque quando ficava ali, ele perdia o conteudo de "item.temConta"
+							 -->
+						
+							<p:commandLink 
+				            	title="Novo Sub-item abaixo deste item" 
+				            	process="@this"
+				            	action="#{classificacaoCtbBean.inicializarSubItem}"
+				            	oncomplete="PF('classeContaDialogWidgetVar').show()"
+				            	style="padding-right: 5px"
+				            	disabled="#{item.temConta}">
+
+								<h:graphicImage	value="../resources/ctbli9/images/inclui.png" rendered="#{!item.temConta}"/>
+								<h:graphicImage	value="../resources/ctbli9/images/incluiDisab.png" rendered="#{item.temConta}"/>
+				            	
+				                <f:setPropertyActionListener value="#{elo}" target="#{classificacaoCtbBean.selectedNode}" />
+				                <p:resetInput target="frm:classeContaDialog" />
+				            </p:commandLink>
+
+							
+							<p:commandLink 
+				            	title="Edita este item" 
+				            	process="@this"
+				            	action="#{classificacaoCtbBean.alterarRegistro}"
+				            	oncomplete="PF('classeContaDialogWidgetVar').show()"
+				            	style="padding-right: 5px">
+				            	
+				            	<h:graphicImage	value="../resources/ctbli9/images/edita.png"/>
+
+				                <f:setPropertyActionListener value="#{elo}" target="#{classificacaoCtbBean.selectedNode}" />
+				                <p:resetInput target="frm:classeContaDialog" />
+				            </p:commandLink>
+				            
+				            <p:commandLink 
+				            	title="Exclui este item" 
+				            	process="@this"
+				            	update="frm:messages"
+				            	action="#{classificacaoCtbBean.excluirClasse}"
+				            	style="padding-right: 5px">
+				            	
+				            	<h:graphicImage	value="../resources/ctbli9/images/delete.png"/>
+				            	
+				                <f:setPropertyActionListener value="#{elo}" target="#{classificacaoCtbBean.selectedNode}" />
+				                
+				                <p:confirm icon="ui-icon-alert" header="Confirmação de Exclusão"
+									message="Deseja Excluir a classe?" />
+				            </p:commandLink>
+				            
+				            <p:commandLink 
+				            	title="Visualiza os relacionamentos com contas e centros de custo" 
+				            	process="@this"
+				            	action="#{classificacaoCtbBean.listarContasSelecionadas}"
+				            	oncomplete="PF('relacionaDialogWidgetVar').show()"
+				            	style="padding-right: 5px"
+				            	rendered="#{item.ultimoNivel}">
+				            	
+				            	<h:graphicImage	value="../resources/ctbli9/images/detalhe.png" />
+
+				                <f:setPropertyActionListener value="#{elo}" target="#{classificacaoCtbBean.selectedNode}" />
+				                <p:resetInput target="frm:relacionaDialog" />				                
+				            </p:commandLink>
+				            
+				        </p:column>    
+						
+				    </p:treeTable>
+					
+				</p:tab>
+				
+				<!-- GRUPOS DE CLASSE -->
+				<p:tab title="Agrupamento">
+					
+					<p:toolbar id="cadToolbar">
+						<f:facet name="left">
+							<p:commandButton value="Incluir" icon="fa fa-plus"
+								title="Inclui novo Agrupamento"
+								actionListener="#{classificacaoCtbBean.incluirGrupoClasse}"
+								process="@this"
+								update="frm:classeTabView:grupoDataTable frm:messages" />
+			
+							<p:commandButton value="Salvar" icon="fa fa-save"
+								title="Grava as alterações efetuadas"
+								actionListener="#{classificacaoCtbBean.salvarGrupoClasse}"
+								process="@this frm:classeTabView:grupoDataTable"
+								update="frm:classeTabView:grupoDataTable frm:messages" />
+						</f:facet>
+					</p:toolbar>
+					
+					<p:spacer height="10"/>
+					<p:dataTable id="grupoDataTable" style="width: 500px" value="#{classificacaoCtbBean.listaGrupoClasse}"
+						var="item" emptyMessage="Nenhuma informação a ser exibida">
+								
+						<p:column headerText="Remove" width="15%" styleClass="central">
+							<p:commandLink 
+								action="#{classificacaoCtbBean.excluirGrupoClasse}"
+								process="@this"
+								update="frm:messages frm:classeTabView:grupoDataTable">
+								
+								<f:setPropertyActionListener value="#{item}"
+									target="#{classificacaoCtbBean.grupoClasse}"/>
+								
+								<h:graphicImage value="../resources/ctbli9/images/delete.png"
+									title="Excluir Item"/>
+									
+								<p:confirm icon="ui-icon-alert" header="Confirmação de Exclusão" 
+				            		message="Deseja excluir este grupo?" />
+							</p:commandLink>	
+						</p:column>
+								
+						<p:column headerText="Código" width="15%" >
+							<h:outputText value="#{item.cdGrupoClasse}" rendered="#{item.cdGrupoClasse ne 0}"/>
+						</p:column>
+			
+						<p:column headerText="Descrição">
+							<p:inputText id="dsGrupoClasse" value="#{item.dsGrupoClasse}" size="30" maxlength="30" styleClass="textoMaiusculo">
+								
+								<p:ajax event="blur" process="@this"/>
+							</p:inputText>
+						</p:column>
+						
+					</p:dataTable>
+				
+				</p:tab>
+				
+			</p:tabView>
+
+			<!--  PAINEL DE MANUTENÇÃO DO REGISTRO -->
+			<p:dialog id="classeContaDialog" header="Cadastro de Classificação de Contas"
+				widgetVar="classeContaDialogWidgetVar" modal="true"
+				resizable="false" closeOnEscape="true">
+				
+				<p:messages id="classeContaMessages" />
+
+				<p:defaultCommand target="salvarCommandButton"
+					scope="classeContaDialog" />
+
+				<h:panelGrid id="classeContaPanelGrid" columns="2"
+					columnClasses="colunaEsquerda,colunaDireita"
+					rendered="#{classificacaoCtbBean.classeConta ne null}">
+
+					<p:outputLabel value="Código Interno:" />
+					<h:outputText value="#{classificacaoCtbBean.classeConta.cdClasse}" styleClass="textoNegrito">
+						<f:convertNumber pattern="000" />
+					</h:outputText>
+
+					<p:outputLabel value="Ano Referência:" />
+					<h:outputText value="#{classificacaoCtbBean.classeConta.nrAno}" styleClass="textoNegrito">
+						<f:convertNumber pattern="0000" />
+					</h:outputText>
+
+					<p:outputLabel value="Descrição" for="dsClasse" />
+					<p:inputText id="dsClasse" size="40" maxlength="40"
+						value="#{classificacaoCtbBean.classeConta.dsClasse}" />
+
+					<p:outputLabel value="Compõe Grupo DRE: " for="tipo" />
+					<p:selectOneMenu id="tipo" value="#{classificacaoCtbBean.classeConta.grupo.cdGrupoClasse}" 
+						disabled="#{classificacaoCtbBean.classeConta.grupo.cdGrupoClasse ne 0}">
+						<f:selectItem itemLabel="Selecione..." />
+						<f:selectItems value="#{classificacaoCtbBean.listaGrupoClasse}"
+							var="tip" itemLabel="#{tip.dsGrupoClasse}" itemValue="#{tip.cdGrupoClasse}" />
+					</p:selectOneMenu>
+
+					<p:outputLabel value="Ordenação DRE:" for="cdNivelClasse" />
+					<p:inputText id="cdNivelClasse" size="14" maxlength="14"
+						value="#{classificacaoCtbBean.classeConta.cdNivelClasse}" 
+						disabled="#{classificacaoCtbBean.classeConta.cdNivelClasse ne ''}"/>
+
+					<h:outputLabel />
+
+					<p:commandButton id="salvarCommandButton" value="Salvar"
+						actionListener="#{classificacaoCtbBean.salvar}"
+						update="classeContaPanelGrid classeContaMessages"
+						oncomplete="if (!args.validationFailed) PF('classeContaDialogWidgetVar').hide()"
+						process="classeContaDialog" />
+
+				</h:panelGrid>
+			</p:dialog>
+
+			
+			<!-- Relacionamento com Conta Contábil X Centro de Custo -->
+			<ui:include src="/WEB-INF/templates/cadastro/_claConta.xhtml" />
+			
+
+			<ui:include src="/WEB-INF/templates/cadastro/_replicaDRE.xhtml" />
+
+		</h:form>
+	</ui:define>
+
+	<ui:define name="rodape">1.0.0</ui:define>
+
+</ui:composition>

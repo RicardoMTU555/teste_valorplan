@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+ 	xmlns:h="http://xmlns.jcp.org/jsf/html"
+ 	xmlns:f="http://xmlns.jcp.org/jsf/core"
+ 	xmlns:p="http://primefaces.org/ui"
+ 	xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+ 	template="/WEB-INF/templates/Layout.xhtml">
+
+<ui:define name="titulo">Lançamento de Investimentos</ui:define>
+
+<ui:define name="conteudo">
+
+	<f:metadata>
+		<f:viewAction action="#{loginBean.validarPermissao('133;')}" />
+		<f:viewAction action="#{lancInvestimentoBean.iniciar}" />
+	</f:metadata>
+
+	<h:form id="frm">
+		<p:growl id="messages" />
+
+		<p:toolbar id="investimentoToolbar">
+			<p:toolbarGroup align="left">
+				<h:panelGrid columns="3" columnClasses="colunaEsquerda,colunaDireita">
+					<p:outputLabel value="Centro de Custo:"/>
+							
+					<p:selectOneMenu id="cenCusto" value="#{lancInvestimentoBean.cenCusto}" var="cec"
+						filter="true" filterMatchMode="contains"
+						style="vertical-align: middle">
+						
+						<f:selectItem itemLabel="Selecione..."/>
+						<f:selectItems value="#{lancInvestimentoBean.listaCentroCusto}" var="set"
+							itemLabel="#{set.codExterno} | #{set.cecDsResumida}" itemValue="#{set}"/>
+							
+						<p:column headerText="Setor">
+							<h:outputText value="#{cec.codExterno}" />
+						</p:column>
+						
+						<p:column headerText="Descrição">
+							<h:outputText value="#{cec.cecDsResumida}" />
+						</p:column>
+						
+						<p:column headerText="Filial">
+							<h:outputText value="#{cec.filial.sgFilial}" />
+						</p:column>
+						
+						<p:ajax event="change" process="@this" update="frm:investimentoDataTable frm:investimentoToolbar frm:valoresDT"
+							listener="#{lancInvestimentoBean.limpaInvestimento}"
+							oncomplete="configurarMoeda()"/>
+					</p:selectOneMenu>
+				
+				
+					<p:selectOneMenu id="categoria" value="#{lancInvestimentoBean.categoriaImobilizado}" var="categ"
+						filter="true" filterMatchMode="contains"
+						style="vertical-align: middle">
+					
+						<f:selectItem itemLabel="Selecione novo ativo..."/>
+						<f:selectItems value="#{lancInvestimentoBean.listaCategoriaImobilizado}" var="cat"
+							itemLabel="#{cat.cdCategImobili}" itemValue="#{cat}"/>
+					
+						<p:column>
+							<h:outputText value="#{categ.cdCategImobili}" />
+						</p:column>
+						<p:column>
+							<h:outputText value="#{categ.dsCategImobili}" />
+						</p:column>
+						
+						<p:ajax event="change" process="@this" 
+							update="investimentoDataTable frm:investimentoToolbar frm:valoresDT"
+							listener="#{lancInvestimentoBean.carregarNovoInvestimento}"
+							oncomplete="configurarMoeda()"/>
+						
+					</p:selectOneMenu>
+				</h:panelGrid>	
+					
+			</p:toolbarGroup>
+
+			<p:toolbarGroup align="right">	            
+	            
+	            <p:commandButton id="gravarCommandButton" value="Salvar" title="Confirma alteração dos dados" icon="fa fa-save" 
+	            	disabled="#{lancInvestimentoBean.inativo}"
+	            	actionListener="#{lancInvestimentoBean.gravarOrcamento}"
+	            	process="@this frm:investimentoDataTable frm:valoresDT" 
+	            	update="messages frm:investimentoDataTable frm:valoresDT frm:investimentoToolbar"
+	            	oncomplete="configurarMoeda()"/>
+				
+				<span class="ui-separator">
+	                <span class="ui-icon ui-icon-grip-dotted-vertical" />
+	            </span>
+	            
+	            <p:commandButton title="Gera Planilha Excel" icon="fa fa-file-excel-o"
+	            	ajax="false">
+	            	<p:dataExporter type="xls" target="investimentoDataTable" fileName="PlanilhaInvestimento" />
+	            </p:commandButton>
+	            
+			</p:toolbarGroup>
+		</p:toolbar>
+				
+		<div class="ui-grid  ui-grid-responsive">
+			<div class="ui-grid-row">	
+				<div class="ui-grid-col-10">
+					
+					<p:dataTable id="investimentoDataTable" value="#{lancInvestimentoBean.listaInvestimento}" var="item" 
+						style="width: 95%"
+						selectionMode="single" selection="#{lancInvestimentoBean.investimento}" rowKey="#{item.cdInvestimento}"
+						emptyMessage="Nenhuma informação encontrada para o filtro selecionado"
+						scrollable="true" scrollHeight="390"
+						reflow="true">
+					
+						<p:ajax event="rowSelect" listener="#{lancInvestimentoBean.listarValores}" 
+							update="frm:investimentoDataTable frm:investimentoToolbar frm:valoresDT" 
+							oncomplete="configurarMoeda()"/>
+						<p:ajax event="rowUnselect" listener="#{lancInvestimentoBean.listarValores}" 
+							update="frm:investimentoDataTable frm:investimentoToolbar frm:valoresDT" />
+						
+						<p:column headerText="Categ." width="7%" sortBy="#{item.imobilizado.cdCategImobili}">
+							<p:commandLink 
+								action="#{lancInvestimentoBean.excluirInvestimento}"
+								process="@this"
+								update="investimentoDataTable frm:messages">
+								
+								<f:setPropertyActionListener value="#{item}"
+									target="#{lancInvestimentoBean.investimento}"/>
+								
+								<h:graphicImage value="../resources/ctbli9/images/delete.png"
+									title="Excluir despesa"/>
+									
+								<p:confirm icon="ui-icon-alert" header="Confirmação de Exclusão" 
+				            		message="Deseja excluir este investimento?" />
+							</p:commandLink>
+							
+							<h:outputText value="#{item.imobilizado.cdCategImobili}"/>
+						</p:column>
+						
+						<p:column headerText="Descrição" sortBy="#{item.imobilizado.dsCategImobili}">
+							<h:outputText value="#{item.imobilizado.dsCategImobili}"/>
+						</p:column>
+						
+						<p:column headerText="Taxa Depreciação" width="8%">
+							<h:outputText value="#{item.imobilizado.pcTaxaDepreciacao}">
+								<f:convertNumber pattern="#,##0.00"/>
+							</h:outputText>
+						</p:column>
+			
+						<p:column headerText="Residual" width="8%">
+							<h:outputText value="#{item.imobilizado.pcResidual}">
+								<f:convertNumber pattern="#,##0.00"/>
+							</h:outputText>
+						</p:column>
+						
+						<p:column headerText="Conta Ativo" width="9%">
+							<h:outputText value="#{item.imobilizado.contaAtivo.cdConta}"/>
+						</p:column>
+						
+						<p:column headerText="Conta Depreciação" width="9%">
+							<h:outputText value="#{item.imobilizado.contaDepreciacao.cdConta}"/>
+						</p:column>
+						
+						<p:column headerText="Ativo" width="22%" sortBy="#{item.dsInvestimento}">
+							<p:inputText value="#{item.dsInvestimento}" style="width: 100%" maxlength="70" 
+								rendered="#{lancInvestimentoBean.itemEstaSelecionado(item)}"/>
+								
+							<h:outputText value="#{item.dsInvestimento}"
+								rendered="#{not (lancInvestimentoBean.itemEstaSelecionado(item))}"/>
+						</p:column>
+						
+						<p:column headerText="Acumulado" width="10%" styleClass="direita" sortBy="#{item.valorAcum}">
+							<h:outputText value="#{item.valorAcum}" 
+								styleClass="#{item.valorAcum > 0 ? 'textoNegrito' : ''}">
+								<f:convertNumber pattern="#,##0.00"/>
+							</h:outputText>
+						</p:column>
+					</p:dataTable>
+				</div>
+			
+				<div class="ui-grid-col-2">
+				
+					<p:dataTable id="valoresDT" value="#{lancInvestimentoBean.valores}" var="item"
+						style="width: 100%"
+						editable="true" editMode="cell" widgetVar="cellParamInvestimento"
+						rowHover="true"
+						rowStyleClass="fundoBranco"
+						reflow="true">
+					
+						<p:column headerText="Mes">
+							<p:cellEditor disabled="true">
+			                   <f:facet name="output"><h:outputText value="#{item.mesRef.nomeMes}"/></f:facet>
+			                   <f:facet name="input"><p:inputText value="#{item.mesRef.nomeMes}" style="width:96%"/></f:facet>
+							</p:cellEditor>
+						</p:column>
+					
+						<p:column headerText="Compra" styleClass="#{item.mesRef.mesAberto ? '' : 'fundoCinza'}">
+							<p:cellEditor disabled="#{!item.mesRef.mesAberto}">
+								<f:facet name="output">
+									<h:outputText value="#{item.vrInvestimento}" 
+			                   			title="#{item.mesRef.mesAberto ? '' : 'MÊS FECHADO'}">
+			                   			<f:convertNumber pattern="#,##0.00"/>
+			                   		</h:outputText>
+			                   	</f:facet>
+			                   	<f:facet name="input">
+			                   		<p:inputText value="#{item.vrInvestimento}" maxlength="15" style="width:100%" styleClass="moeda">
+										<f:convertNumber maxFractionDigits="2" minFractionDigits="2"/>
+										
+										<p:ajax event="blur" update="valorDepreciacaoOutput valorDepreciacaoInput"/>
+									</p:inputText>
+			                   	</f:facet>
+							</p:cellEditor>						
+						</p:column>
+						
+						<p:column headerText="Valor Depraciação" styleClass="#{item.mesRef.mesAberto ? '' : 'fundoCinza'}">
+							<p:cellEditor disabled="true">
+								<f:facet name="output">
+									<h:outputText id="valorDepreciacaoOutput" value="#{item.vrDepreciacao}" title="#{item.mesRef.mesAberto ? '' : 'MÊS FECHADO'}">
+			                   			<f:convertNumber pattern="#,##0.00"/>
+			                   		</h:outputText>
+			                   	</f:facet>
+			                   	<f:facet name="input">
+			                   		<h:outputText id="valorDepreciacaoInput" value="#{item.vrDepreciacao}" title="#{item.mesRef.mesAberto ? '' : 'MÊS FECHADO'}">
+			                   			<f:convertNumber pattern="#,##0.00"/>
+			                   		</h:outputText>
+			                   	</f:facet>
+							</p:cellEditor>						
+						</p:column>
+									
+					</p:dataTable>
+				</div>
+			</div>
+		</div>					
+	</h:form>		
+</ui:define>
+
+<ui:define name="rodape">1.0.0</ui:define>
+
+</ui:composition>

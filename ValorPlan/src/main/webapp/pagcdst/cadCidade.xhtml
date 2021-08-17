@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+ 	xmlns:h="http://xmlns.jcp.org/jsf/html"
+ 	xmlns:f="http://xmlns.jcp.org/jsf/core"
+ 	xmlns:p="http://primefaces.org/ui"
+ 	xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+ 	template="/WEB-INF/templates/Layout.xhtml">
+
+<ui:define name="titulo">Cadastro de Cidades e Bairros</ui:define>
+
+<ui:define name="conteudo">
+
+	<f:metadata>
+		<f:viewAction action="#{loginBean.validarPermissao('3;')}"/>
+		<f:viewAction action="#{cidadeBean.listarTudo}" />
+	</f:metadata>
+
+	<h:form id="frm">
+		<p:messages id="messages" />
+		
+		<p:accordionPanel id="filtroAccordion">
+			<p:tab title="Filtro Cidades">
+				<p:panel>
+					<h:panelGrid id="filtroPanelgrid" style="width:100%" columns="4" 
+						columnClasses="colunaEsquerda,colunaDireita,colunaEsquerda,colunaDireita">
+						
+						<p:outputLabel value="Nome" for="filtroNmCidade"/>
+						<p:inputText id="filtroNmCidade" placeholder="Parte do nome..." size="20"
+							value="#{cidadeBean.filtroNmCidade}"/>
+						
+						<p:outputLabel value="Estado" for="estado"/>
+						<p:selectOneMenu id="estado" value="#{cidadeBean.filtroCdEstado}"
+							filter="true" filterMatchMode="startsWith">
+						
+							<f:selectItem itemLabel="Todos..."/>
+							<f:selectItems value="#{cidadeBean.estadosBrasileiros}" var="uf" 
+								itemValue="#{uf}" itemLabel="#{uf.descricao}"/>
+						</p:selectOneMenu>
+						
+					</h:panelGrid>
+				</p:panel>
+			</p:tab>
+		</p:accordionPanel>
+		
+		<p:toolbar id="cidadeToolbar">
+			<f:facet name="left">
+				<p:commandButton value="Pesquisar" icon="fa fa-search" 
+					title="Executa a pesquisa sobre o filtro selecionado"
+					actionListener="#{cidadeBean.listarFiltro}" 
+					update="cidadeDataTable messages"
+					process="@this frm:filtroAccordion"/>
+				
+				<span class="ui-separator">
+	                <span class="ui-icon ui-icon-grip-dotted-vertical" />
+	            </span>
+	            
+	            <p:commandButton value="Incluir" icon="fa fa-plus"
+	            	title="Inclui nova cidade"
+	            	actionListener="#{cidadeBean.inicializarRegistro}" 
+	            	oncomplete="PF('cidadeDialogWidgetVar').show()"
+	            	update="cidadeDialog" process="@this">
+	            	<p:resetInput target="cidadeDialog"/>
+	            </p:commandButton>
+	
+				<span class="ui-separator">
+	                <span class="ui-icon ui-icon-grip-dotted-vertical" />
+	            </span>
+	            
+	            <p:commandButton value="Editar" icon="fa fa-edit"
+	            	title="Altera a cidade selecionada" 
+	            	disabled="#{not cidadeBean.itemSelecionado}"
+	            	oncomplete="PF('cidadeDialogWidgetVar').show()"
+	            	update="cidadeDialog" process="@this">
+	            	
+	            	<p:resetInput target="cidadeDialog"/>
+	            </p:commandButton>
+	
+	            <p:commandButton value="Excluir" icon="fa fa-trash"
+	            	title="Exclui a cidade selecionada" 
+	            	disabled="#{not cidadeBean.itemSelecionado}"
+	            	actionListener="#{cidadeBean.excluir}"
+	            	update="messages cidadeDataTable cidadeToolbar"
+					process="@this">
+					
+	            	<p:confirm icon="ui-icon-alert" header="Confirmação de Exclusão" 
+	            		message="Deseja Excluir a cidade?" />
+	            </p:commandButton>
+	            
+				<span class="ui-separator">
+	                <span class="ui-icon ui-icon-grip-dotted-vertical" />
+	            </span>
+
+	            <p:commandButton value="Bairros" icon="fa fa-edit"
+	            	title="Manutenção nos bairros da cidade selecionada" 
+	            	disabled="#{not cidadeBean.itemSelecionado}"
+	            	actionListener="#{cidadeBean.listarBairrosCidade}"
+	            	oncomplete="PF('bairroDialogWidgetVar').show()"
+	            	update="bairroDialog" process="@this">
+	            	<p:resetInput target="bairroDialog"/>
+	            </p:commandButton>
+	
+				<span class="ui-separator">
+	                <span class="ui-icon ui-icon-grip-dotted-vertical" />
+	            </span>
+	            
+	            <p:commandButton value="Excel" title="Gera Planilha Excel" icon="fa fa-file-excel-o"
+	            	ajax="false">
+	            	<p:dataExporter type="xls" target="cidadeDataTable" fileName="PlanilhaCidade" />
+	            </p:commandButton>
+			</f:facet>
+		</p:toolbar>
+
+		<p:spacer height="10" />
+		
+		<p:dataTable id="cidadeDataTable" style="width:970px;" value="#{cidadeBean.cidades}" 
+			var="item" emptyMessage="Nenhuma informação a ser exibida"
+			paginator="true" rows="15" paginatorPosition="bottom"
+			selectionMode="single" selection="#{cidadeBean.cidade}" rowKey="#{item.cdCidade}">
+				
+			<p:ajax event="rowSelect" update="frm:cidadeToolbar" />
+			<p:ajax event="rowUnselect" update="frm:cidadeToolbar" />
+			
+			<p:column headerText="Nome" sortBy="#{item.nmCidade}">
+				<h:outputText value="#{item.nmCidade}" />
+			</p:column>
+			
+			<p:column headerText="Código IBGE" width="20%" sortBy="#{item.cdCidade}">
+				<h:outputText value="#{item.cdIBGE}">
+					<f:convertNumber pattern="0000000"/>
+				</h:outputText>
+			</p:column>
+										
+			<p:column headerText="Estado" width="20%" sortBy="#{item.cdCidade}">
+				<h:outputText value="#{item.estado.descricao}"/>
+			</p:column>
+										
+		</p:dataTable>
+		
+		<p:dialog id="cidadeDialog" header="Cadastro de Cidade" widgetVar="cidadeDialogWidgetVar"
+			modal="true" resizable="false" closeOnEscape="true">
+			<p:messages id="cidadeMessages"/>
+			
+			<p:defaultCommand target="salvarCommandButton" scope="cidadeDialog" />
+		
+			<h:panelGrid id="cidadePanelGrid" columns="2" columnClasses="colunaEsquerda,colunaDireita"
+				rendered="#{cidadeBean.cidade ne null}">
+				
+				<p:outputLabel value="ID Interno:"/>
+				<h:outputText value="#{cidadeBean.cidade.cdCidade}" styleClass="textoNegrito">
+					<f:convertNumber pattern="000000" />
+				</h:outputText>
+					
+				<p:outputLabel value="Nome da Cidade:" for="nome"/>
+				<p:inputText id="nome" size="40" maxlength="40" styleClass="textoMaiusculo" 
+					value="#{cidadeBean.cidade.nmCidade}"/>
+					
+				<p:outputLabel value="Código IBGE:" for="cdIBGE"/>
+				<p:inputText id="cdIBGE" value="#{cidadeBean.cidade.cdIBGE}" size="7" maxlength="7">
+					<f:convertNumber pattern="0000000" />
+				</p:inputText>
+					
+				<p:outputLabel value="Estado:" for="estado"/>
+				<p:selectOneMenu id="estado" value="#{cidadeBean.cidade.estado}"
+					filter="true" filterMatchMode="startsWith">
+				
+					<f:selectItem itemLabel="Selecione..."/>
+					<f:selectItems value="#{cidadeBean.estadosBrasileiros}" var="uf" 
+						itemValue="#{uf}" itemLabel="#{uf.descricao}"/>
+				</p:selectOneMenu>
+
+				<h:outputLabel />
+				
+				<p:commandButton id="salvarCommandButton" value="Salvar" actionListener="#{cidadeBean.salvar}"
+					update="cidadePanelGrid cidadeMessages"
+					oncomplete="if (!args.validationFailed) PF('cidadeDialogWidgetVar').hide()" process="cidadeDialog"/>
+					
+			</h:panelGrid>		
+		</p:dialog>
+		
+		<p:dialog id="bairroDialog" header="Cadastro de Bairros da Cidade" widgetVar="bairroDialogWidgetVar"
+			modal="true" resizable="false" closeOnEscape="true">
+			<p:messages id="bairroMessages"/>
+		
+			<!-- XHTML DO FORMULARIO DE BAIRROS DA CIDADE -->
+			<ui:include src="/WEB-INF/templates/cadastro/_cadastroBairro.xhtml" />			
+		
+		</p:dialog>
+			
+	</h:form>		
+</ui:define>
+
+<ui:define name="rodape">1.0.0</ui:define>
+
+</ui:composition>

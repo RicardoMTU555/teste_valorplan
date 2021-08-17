@@ -1,0 +1,36 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+    xmlns:h="http://java.sun.com/jsf/html"
+    xmlns:f="http://java.sun.com/jsf/core"
+    xmlns:ui="http://java.sun.com/jsf/facelets"
+    xmlns:p="http://primefaces.org/ui">
+
+	<p:dialog id="replicaDialog" header="Cadastro de Departamentos" widgetVar="replicaDialogWidgetVar"
+		modal="true" resizable="false" closeOnEscape="true">
+		<p:messages id="replicarMessages"/>
+		
+		<p:defaultCommand target="replicarCB" scope="frm:replicaDialog" />
+	
+		<h:panelGrid columns="2" columnClasses="colunaEsquerda,colunaDireita">
+			
+			<p:outputLabel value="Informe o ANO ORIGEM da Estrutura:" escape="false"/>
+			<p:inputMask id="nroAnoOrigem" mask="9999" value="#{classificacaoCtbBean.nroAnoOrigem}" size="4"/>
+			
+			<h:outputText/>
+			<h:outputText/>
+			
+			<p:outputLabel value="Informe o ANO DESTINO da Estrutura:" escape="false"/>
+			<p:inputMask id="nroAnoDestino" mask="9999" value="#{classificacaoCtbBean.nroAnoDestino}" size="4"/>
+			
+			<h:outputText/>
+			
+			<p:commandButton id="replicarCB" value="Confirmar" 
+				actionListener="#{classificacaoCtbBean.replicar}"
+				process="replicaDialog"
+				update="replicarMessages"
+				oncomplete="if (!args.validationFailed) PF('replicaDialogWidgetVar').hide()" />
+					
+		</h:panelGrid>
+	</p:dialog>
+
+  	
+</ui:composition>

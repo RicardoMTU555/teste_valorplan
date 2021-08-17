@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+ 	xmlns:h="http://xmlns.jcp.org/jsf/html"
+ 	xmlns:f="http://xmlns.jcp.org/jsf/core"
+ 	xmlns:p="http://primefaces.org/ui"
+ 	xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+ 	template="/WEB-INF/templates/Layout.xhtml">
+
+<ui:define name="titulo">Importador de Arquivos</ui:define>
+
+<f:metadata>
+	<f:viewAction action="#{loginBean.validarPermissao('302;')}"/>
+	<f:viewAction action="#{importadorBean.listarArquivos}"/>
+</f:metadata>
+
+<ui:define name="conteudo">
+	
+	<h:form id="frmImportador">
+		<p:ajaxStatus onstart="$('input').css('background-color', 'yellow')"
+			oncomplete="$('input').css('background-color', '')" />
+	
+		<p:messages id="messages" showSummary="true" showDetail="false" escape="false"/>
+		
+		<div class="ui-fluid">
+			<p:panelGrid id="dadosPanelGrid" columns="2" layout="grid"
+					columnClasses="ui-grid-col-3, ui-grid-col-9"
+					styleClass="panelgrid-noborder">
+				
+				<p:outputLabel value="Conjunto de Caracteres"/>
+				<p:selectOneMenu id="codCharsert" value="#{importadorBean.formatoDados.codCharsert}"
+					style="width: inherit">
+					<f:selectItem itemLabel="UTF-8" itemValue="0"/>
+					<f:selectItem itemLabel="ISO" itemValue="1"/>
+				</p:selectOneMenu>
+				
+				<p:outputLabel value="Separador de Campos do arquivo"/>
+				<p:inputText value="#{importadorBean.formatoDados.separadorCampo}" size="1" maxlength="1"/>
+				
+				<p:outputLabel value="Caracter de decimal"/>
+				<p:selectOneMenu id="charDecimal" value="#{importadorBean.formatoDados.charDecimal}"
+					style="width: auto">
+					<f:selectItem itemLabel="," itemValue=","/>
+					<f:selectItem itemLabel="." itemValue="."/>
+				</p:selectOneMenu>
+				
+				<p:outputLabel value="Formato dos campos DATA"/>
+				<p:inputText value="#{importadorBean.formatoDados.formatoData}" size="10" maxlength="10"/>
+
+			</p:panelGrid>
+			
+			<br/>
+			<p:commandButton id="importarCommandButton" value="Importar" 
+				actionListener="#{importadorBean.importarArquivo}" 
+				disabled="#{not importadorBean.itemSelecionado}" 
+				process="@this dadosPanelGrid arquivosDataTable" update="messages arquivosDataTable"
+				style="width: auto">
+				
+				<p:ajaxStatus onstart="PF('statusDialog').show()" onsuccess="PF('statusDialog').hide()" />
+				
+			</p:commandButton>
+			<br/>
+			
+			<p:dataTable id="arquivosDataTable" value="#{importadorBean.listaArquivos}" var="item"
+				selectionMode="single" selection="#{importadorBean.arquivoImporta}" rowKey="#{item}"
+				reflow="true">
+				
+				<p:ajax event="rowSelect" update="frmImportador:importarCommandButton" />
+				<p:ajax event="rowUnselect" update="frmImportador:importarCommandButton" />
+			
+				<p:column headerText="Arquivos a Serem Processados">
+					<h:outputText value="#{item}"/>
+				</p:column>
+			</p:dataTable>
+
+		</div>
+		
+		<p:dialog widgetVar="statusDialog" modal="true" draggable="false" closable="false" resizable="false" showHeader="false">
+            <h2>Aguarde... Processando importação.</h2>
+		</p:dialog>
+					
+	</h:form>
+</ui:define>
+	
+<ui:define name="rodape">1.0.0</ui:define>
+
+</ui:composition>
